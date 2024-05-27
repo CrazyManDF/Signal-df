@@ -33,4 +33,8 @@ class ConversationListTabsViewModel : ViewModel() {
             ConversationListTabsState().copy(tab = ConversationListTab.STORIES)
         )
     }
+
+    private fun performStoreUpdate(){
+
+    }
 }
