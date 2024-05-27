@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_activity_list"
+    app:startDestination="@id/conversationListFragment">
+
+    <fragment
+        android:id="@+id/conversationListFragment"
+        android:name="org.thoughtcrime.securesms.conversationlist.ConversationListFragment"
+        android:label="conversation_list_fragment">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/storiesLandingFragment"
+        android:name="org.thoughtcrime.securesms.stories.landing.StoriesLandingFragment"
+        android:label="stories_landing_fragment">
+
+    </fragment>
+
+    <fragment
+        android:id="@+id/callLogFragment"
+        android:label="call_log_fragment">
+
+    </fragment>
+
+</navigation>
