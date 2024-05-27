@@ -52,6 +52,7 @@ android {
 
 dependencies {
 
+    implementation(project(":core-util"))
     implementation(project(":core-util-jvm"))
 
     implementation(libs.androidx.core.ktx)
