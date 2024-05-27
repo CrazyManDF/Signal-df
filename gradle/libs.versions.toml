@@ -1,13 +1,14 @@
 [versions]
+composeCompiler = "1.5.13"
 agp = "8.4.1"
-kotlin = "1.9.0"
+kotlin = "1.9.23"
 coreKtx = "1.13.1"
 junit = "4.13.2"
 junitVersion = "1.1.5"
 espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.8.0"
 activityCompose = "1.9.0"
-composeBom = "2023.08.00"
+composeBom = "2024.05.00"
 
 appcompat = "1.6.1"
 material = "1.12.0"
@@ -16,6 +17,9 @@ androidxFragment = "1.7.1"
 androidxNavigation = "2.7.7"
 androidxConstraintlayout = "2.1.4"
 lottie = "6.4.0"
+rxjava3Rxjava = "3.1.8"
+rxjava3Rxandroid = "3.0.2"
+rxjava3Rxkotlin = "3.0.1"
 
 [libraries]
 # Android X
@@ -41,6 +45,10 @@ androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref
 androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidxNavigation" }
 androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "androidxConstraintlayout" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+
+rxjava3-rxjava = { module = "io.reactivex.rxjava3:rxjava", version.ref = "rxjava3Rxjava" }
+rxjava3-rxandroid = { module = "io.reactivex.rxjava3:rxandroid", version.ref = "rxjava3Rxandroid" }
+rxjava3-rxkotlin = { module = "io.reactivex.rxjava3:rxkotlin", version.ref = "rxjava3Rxkotlin" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

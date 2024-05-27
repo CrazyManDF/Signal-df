@@ -37,10 +37,11 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        viewBinding = true
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
     }
     packaging {
         resources {
@@ -74,4 +75,7 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.lottie)
+    implementation(libs.rxjava3.rxjava)
+    implementation(libs.rxjava3.rxandroid)
+    implementation(libs.rxjava3.rxkotlin)
 }
