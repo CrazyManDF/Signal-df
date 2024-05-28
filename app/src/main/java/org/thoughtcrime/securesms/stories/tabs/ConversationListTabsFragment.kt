@@ -7,11 +7,15 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AnimationSet
 import android.widget.ImageView
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.airbnb.lottie.LottieAnimationView
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.model.KeyPath
 import io.reactivex.rxjava3.kotlin.subscribeBy
 import org.signal.core.util.DimensionUnit
+import org.signal.core.util.concurrent.LifecycleDisposable
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.components.ViewBinderDelegate
@@ -24,13 +28,32 @@ import org.thoughtcrime.securesms.util.visible
 class ConversationListTabsFragment : Fragment(R.layout.conversation_list_tabs) {
 
     private val viewModel: ConversationListTabsViewModel by viewModels(ownerProducer = {requireActivity()})
-
+    private val disposables: LifecycleDisposable = LifecycleDisposable()
     private val binding: ConversationListTabsBinding by ViewBinderDelegate(ConversationListTabsBinding::bind)
     private var shouldBeImmediate = true
     private var pillAnimator: Animator? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        disposables.bindTo(viewLifecycleOwner)
+
+        val iconTint = ContextCompat.getColor(requireContext(), R.color.signal_colorOnSecondaryContainer)
+
+        binding.chatsTabIcon.addValueCallback(
+            KeyPath("**"),
+            LottieProperty.COLOR
+        ) { iconTint }
+
+        binding.callsTabIcon.addValueCallback(
+            KeyPath("**"),
+            LottieProperty.COLOR
+        ) { iconTint }
+
+        binding.storiesTabIcon.addValueCallback(
+            KeyPath("**"),
+            LottieProperty.COLOR
+        ) { iconTint }
+
 
         binding.chatsTabTouchPoint.setOnClickListener {
             viewModel.onChatsSelected()
@@ -42,7 +65,7 @@ class ConversationListTabsFragment : Fragment(R.layout.conversation_list_tabs) {
             viewModel.onStoriesSelected()
         }
 
-        viewModel.state.subscribeBy {
+        disposables += viewModel.state.subscribeBy {
             update(it, shouldBeImmediate)
             shouldBeImmediate = false
         }

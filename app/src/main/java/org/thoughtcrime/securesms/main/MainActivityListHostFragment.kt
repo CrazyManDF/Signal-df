@@ -9,6 +9,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.fragment.findNavController
 import io.reactivex.rxjava3.kotlin.subscribeBy
+import org.signal.core.util.concurrent.LifecycleDisposable
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.R
 import org.thoughtcrime.securesms.stories.tabs.ConversationListTab
@@ -21,11 +22,13 @@ class MainActivityListHostFragment : Fragment(R.layout.main_activity_list_host_f
     }
 
     private val conversationListTabsViewModel: ConversationListTabsViewModel by viewModels(ownerProducer = {requireActivity()})
+    private val disposables: LifecycleDisposable = LifecycleDisposable()
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        disposables.bindTo(viewLifecycleOwner)
 
-        val disposable = conversationListTabsViewModel.state.subscribeBy { state ->
+        disposables += conversationListTabsViewModel.state.subscribeBy { state ->
             val controller = requireView().findViewById<View>(R.id.fragment_container).findNavController()
             when (controller.currentDestination?.id) {
                 R.id.conversationListFragment -> goToStateFromConversationList(state, controller)
