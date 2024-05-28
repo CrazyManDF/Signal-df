@@ -79,4 +79,5 @@ dependencies {
     implementation(libs.rxjava3.rxjava)
     implementation(libs.rxjava3.rxandroid)
     implementation(libs.rxjava3.rxkotlin)
+    implementation(libs.material)
 }
