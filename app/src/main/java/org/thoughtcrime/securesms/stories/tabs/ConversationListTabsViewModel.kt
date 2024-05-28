@@ -6,35 +6,35 @@ import io.reactivex.rxjava3.core.BackpressureStrategy
 import io.reactivex.rxjava3.core.Flowable
 import io.reactivex.rxjava3.processors.BehaviorProcessor
 import io.reactivex.rxjava3.subjects.BehaviorSubject
+import org.thoughtcrime.securesms.util.rx.RxStore
 
 class ConversationListTabsViewModel : ViewModel() {
+    private val store = RxStore(ConversationListTabsState())
 
-    private val behaviorProcessor = BehaviorProcessor.createDefault(ConversationListTabsState())
-
-    val stateFlowable: Flowable<ConversationListTabsState> = behaviorProcessor.onBackpressureLatest()
-
-    val state: Flowable<ConversationListTabsState> = stateFlowable.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread())
+    val state: Flowable<ConversationListTabsState> = store.stateFlow.distinctUntilChanged().observeOn(AndroidSchedulers.mainThread())
 
 
     fun onChatsSelected() {
-        behaviorProcessor.onNext(
-            ConversationListTabsState().copy(tab = ConversationListTab.CHATS)
-        )
+        performStoreUpdate{
+            it.copy(tab = ConversationListTab.CHATS)
+        }
     }
 
     fun onCallsSelected() {
-        behaviorProcessor.onNext(
-            ConversationListTabsState().copy(tab = ConversationListTab.CALLS)
-        )
+        performStoreUpdate{
+            it.copy(tab = ConversationListTab.CALLS)
+        }
     }
 
     fun onStoriesSelected() {
-        behaviorProcessor.onNext(
-            ConversationListTabsState().copy(tab = ConversationListTab.STORIES)
-        )
+        performStoreUpdate{
+            it.copy(tab = ConversationListTab.STORIES)
+        }
     }
 
-    private fun performStoreUpdate(){
-
+    private fun performStoreUpdate(fn: (ConversationListTabsState) -> ConversationListTabsState){
+        store.update {
+            fn(it.copy(prevTab = it.tab))
+        }
     }
 }

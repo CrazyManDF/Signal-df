@@ -25,7 +25,6 @@ class ViewBinderDelegate<T : ViewBinding>(
             thisRef.viewLifecycleOwner.lifecycle.addObserver(this@ViewBinderDelegate)
             binding = bindingFactory(thisRef.requireView())
         }
-        Log.d(">>>", "getValue===========")
         return  binding!!
     }
 
