@@ -25,3 +25,4 @@ rootProject.name = "Signal-Test"
 include(":app")
 include(":core-util-jvm")
 include(":core-util")
+include(":libsignal-service")

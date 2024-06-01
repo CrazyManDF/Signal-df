@@ -54,6 +54,7 @@ dependencies {
 
     implementation(project(":core-util"))
     implementation(project(":core-util-jvm"))
+    implementation(project(":libsignal-service"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
@@ -80,4 +81,5 @@ dependencies {
     implementation(libs.rxjava3.rxandroid)
     implementation(libs.rxjava3.rxkotlin)
     implementation(libs.material)
+    implementation(libs.androidx.lifecycle.process)
 }
