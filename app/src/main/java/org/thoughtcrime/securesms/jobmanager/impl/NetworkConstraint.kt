@@ -23,7 +23,15 @@ class NetworkConstraint(private val application: Application) : Constraint {
     override fun getJobSchedulerKeyPart(): String? {
         return "NETWORK"
     }
+
+    class  Factory(private val application: Application) : Constraint.Factory<NetworkConstraint>{
+        override fun create(): NetworkConstraint {
+            return NetworkConstraint(application)
+        }
+
+    }
     companion object {
+
         const val KEY: String = "NetworkConstraint"
 
         fun isMet(context: Context): Boolean {

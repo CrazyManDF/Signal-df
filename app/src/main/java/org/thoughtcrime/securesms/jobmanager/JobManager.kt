@@ -23,7 +23,8 @@ import kotlin.math.max
 import kotlin.math.min
 
 class JobManager(
-    val application: Application, val configuration: Configuration
+    val application: Application,
+    val configuration: Configuration
 ) : ConstraintObserver.Notifier {
 
     private val lock = ReentrantLock()
@@ -64,7 +65,6 @@ class JobManager(
     init {
         executor.execute {
             lock.withLock {
-                Log.d(TAG, "开始初始化: ${Thread.currentThread()}")
                 val jobStorage = configuration.jobStorage
                 jobStorage.init()
 
@@ -84,7 +84,6 @@ class JobManager(
 
                 condition.signalAll()
                 jobController.wakeUp()
-                Log.d(TAG, "Initialized");
             }
         }
     }
@@ -123,7 +122,7 @@ class JobManager(
     }
 
     fun add(job: Job) {
-        Chain(this, listOf<Job>(job)).enqueue()
+        Chain(this, listOf(job)).enqueue()
     }
 
     private fun runOnExecutor(runnable: Runnable) {
@@ -135,13 +134,13 @@ class JobManager(
 
     private fun waitUntilInitialized() {
         if (initialized.not()) {
-            Log.i(TAG, "Waiting for initialization...")
+            Log.i(TAG, "等待初始化 Waiting for initialization...")
             lock.withLock {
                 while (initialized.not()) {
                     Util.wait(condition, 0)
                 }
             }
-            Log.i(TAG, "Initialization complete.")
+            Log.i(TAG, "初始化完成 Initialization complete.")
         }
     }
 
@@ -162,7 +161,7 @@ class JobManager(
         var constraintInstantiator: ConstraintInstantiator<*>,
         var constraintObservers: List<ConstraintObserver> = mutableListOf(),
         var jobStorage: JobStorage,
-        var jobMigrator: JobMigrator,
+        var jobMigrator: JobMigrator?,
         var jobTracker: JobTracker,
         var reservedJobRunners: List<JobPredicate> = mutableListOf()
     ) {
@@ -173,8 +172,8 @@ class JobManager(
             var jobFactories: Map<String, Job.Factory<T>> = hashMapOf()
             var constraintFactories: Map<String, Constraint.Factory<U>> = hashMapOf()
             var constraintObservers: List<ConstraintObserver> = mutableListOf()
-            lateinit var jobStorage: JobStorage
-            lateinit var jobMigrator: JobMigrator
+            var jobStorage: JobStorage? = null
+            var jobMigrator: JobMigrator? = null
             private var jobTracker: JobTracker = JobTracker()
             var reservedJobRunners = mutableListOf<JobPredicate>()
 
@@ -218,7 +217,7 @@ class JobManager(
                     JobInstantiator(jobFactories),
                     ConstraintInstantiator(constraintFactories),
                     constraintObservers,
-                    jobStorage,
+                    jobStorage!!,
                     jobMigrator,
                     jobTracker,
                     reservedJobRunners

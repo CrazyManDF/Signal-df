@@ -15,7 +15,7 @@ interface Constraint {
         return null
     }
 
-    interface Factory<T : Constraint> {
+    interface Factory<out T : Constraint> {
         fun create(): T
     }
 }

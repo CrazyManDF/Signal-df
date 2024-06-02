@@ -1,6 +1,6 @@
 package org.thoughtcrime.securesms.jobmanager
 
-class JobInstantiator<T : Job>(
+class JobInstantiator<out T : Job>(
     private val jobFactories: Map<String, Job.Factory<T>>
 ) {
 

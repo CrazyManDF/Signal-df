@@ -9,6 +9,9 @@ open class JobDatabase private constructor(context: Context) {
 
     }
 
+    fun markJobAsRunning(id: String, currentTime: Long) {
+
+    }
 
     companion object : SingletonHolder<JobDatabase, Context>(::JobDatabase)
 }

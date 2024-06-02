@@ -54,11 +54,9 @@ class JobController<T : Job, U : Constraint>(
     }
 
     @WorkerThread
-    fun submitNewJobChain(chainO: List<List<Job>>) {
+    fun submitNewJobChain(chainValue: List<List<Job>>) {
         val chain = lock.withLock {
-            val chain = runBlocking {
-                chainO.asFlow().filterNot { it.isEmpty() }.toList()
-            }
+            val chain = chainValue.filterNot { it.isEmpty() }
             if (chain.isEmpty()) {
                 Log.w(TAG, "Tried to submit an empty job chain. Skipping.");
                 return
@@ -130,7 +128,7 @@ class JobController<T : Job, U : Constraint>(
         }
 
         canRun.forEach { job ->
-            job.setContext(application)
+            job.overwriteContext(application)
             job.onSubmit()
         }
 
@@ -186,6 +184,7 @@ class JobController<T : Job, U : Constraint>(
     fun onRetry(job: Job, backoffInterval: Long) = lock.withLock {
         require(backoffInterval > 0) { "Invalid backoff interval! $backoffInterval" }
 
+        Log.d(TAG, "执行重试job ${job.getId()}  ${Thread.currentThread()}")
         val nextRunAttempt = job.runAttempt + 1
         val serializedData = job.serialize()
 
@@ -214,6 +213,7 @@ class JobController<T : Job, U : Constraint>(
 
     @WorkerThread
     fun onSuccess(job: Job, outputData: ByteArray?) = lock.withLock {
+        Log.d(TAG, "执行成功job ${job?.getId()}  ${Thread.currentThread()}")
         if (outputData != null) {
             val updates = jobStorage.getDependencySpecsThatDependOnJob(job.getId())
                 .map { it.jobId }
@@ -232,7 +232,8 @@ class JobController<T : Job, U : Constraint>(
      * @return The list of all dependent jobs that should also be failed.
      */
     @WorkerThread
-    fun onFailure(job: Job): List<Job>  = lock.withLock {
+    fun onFailure(job: Job): List<Job> = lock.withLock {
+        Log.d(TAG, "执行失败job ${job.getId()}  ${Thread.currentThread()}")
         val dependents = jobStorage.getDependencySpecsThatDependOnJob(job.getId())
             .map { it.jobId }
             .map { jobStorage.getJobSpec(it) }
@@ -258,7 +259,8 @@ class JobController<T : Job, U : Constraint>(
     @WorkerThread
     fun pullNextEligibleJobForExecution(predicate: JobPredicate): Job = lock.withLock {
         runCatching {
-
+            Log.d(TAG, "进入pullNextEligibleJobForExecution==${Thread.currentThread()}")
+            Log.d(TAG, "$this==$lock")
             var job: Job?
 
             while (getNextEligibleJobForExecution(predicate).also {
@@ -268,17 +270,20 @@ class JobController<T : Job, U : Constraint>(
                 if (runningJobs.isEmpty()) {
                     debouncer.publish(callback::onEmpty)
                 }
-
+                Log.d(TAG, "等待-获取job ${Thread.currentThread()}")
                 condition.await()
+                Log.d(TAG, "唤醒-获取job ${Thread.currentThread()}")
             }
 
+            Log.d(TAG, "获取到job ${job?.getId()}  ${Thread.currentThread()}")
             jobStorage.markJobAsRunning(job!!.getId(), System.currentTimeMillis())
             runningJobs[job!!.getId()] = job!!
             jobTracker.onStateChange(job!!, JobTracker.JobState.RUNNING)
 
+            Log.d(TAG, "离开pullNextEligibleJobForExecution==${Thread.currentThread()}")
             job!!
         }.getOrElse { e ->
-            Log.e(TAG, "Interrupted.");
+            Log.e(TAG, "Interrupted.  ${Thread.currentThread()}");
             throw AssertionError(e)
         }
     }
@@ -297,7 +302,7 @@ class JobController<T : Job, U : Constraint>(
         if (chain.size == 1 && chain[0].size == 1) {
             return exceedsMaximumInstances(chain[0][0]);
         } else {
-            return false;
+            return false
         }
     }
 
@@ -321,10 +326,10 @@ class JobController<T : Job, U : Constraint>(
     }
 
     @WorkerThread
-    private fun triggerOnSubmit(chain: List<List<Job>>) = runBlocking {
-        chain.asFlow().collect { list ->
-            list.asFlow().collect { job ->
-                job.setContext(application)
+    private fun triggerOnSubmit(chain: List<List<Job>>) {
+        chain.forEach { list ->
+            list.forEach { job ->
+                job.overwriteContext(application)
                 job.onSubmit()
             }
         }
@@ -339,7 +344,8 @@ class JobController<T : Job, U : Constraint>(
             jobList.forEach { job ->
                 fullSpecs.add(buildFullSpec(job, dependsOn))
             }
-            dependsOn.addAll(runBlocking { jobList.asFlow().map { it.getId() }.toList() })
+            // 后面的job依赖前面的job
+            dependsOn.addAll(jobList.map { it.getId() })
         }
 
         jobStorage.insertJobs(fullSpecs)
@@ -366,20 +372,16 @@ class JobController<T : Job, U : Constraint>(
             job.parameters.priority
         )
 
-        val constraintSpecs = runBlocking {
-            job.parameters.constraintKeys.asFlow()
-                .map { ConstraintSpec(jobSpec.id, it, jobSpec.isMemoryOnly) }
-                .toList()
+        val constraintSpecs = job.parameters.constraintKeys.map {
+            ConstraintSpec(jobSpec.id, it, jobSpec.isMemoryOnly)
         }
 
-        val dependencySpecs = runBlocking {
-            dependsOn.asFlow().map { depends ->
-                val dependsOnJobSpec = jobStorage.getJobSpec(depends)
-                val memoryOnly =
-                    job.parameters.memoryOnly || (dependsOnJobSpec != null && dependsOnJobSpec.isMemoryOnly)
+        val dependencySpecs = dependsOn.map { depends ->
+            val dependsOnJobSpec = jobStorage.getJobSpec(depends)
+            val memoryOnly =
+                job.parameters.memoryOnly || (dependsOnJobSpec != null && dependsOnJobSpec.isMemoryOnly)
 
-                DependencySpec(job.getId(), depends, memoryOnly)
-            }.toList()
+            DependencySpec(job.getId(), depends, memoryOnly)
         }
 
         return FullSpec(jobSpec, constraintSpecs, dependencySpecs)
@@ -418,14 +420,14 @@ class JobController<T : Job, U : Constraint>(
 
     private fun createJob(jobSpec: JobSpec, constraintSpecs: List<ConstraintSpec>): Job {
         val parameters = buildJobParameters(jobSpec, constraintSpecs)
-        kotlin.runCatching {
+        runCatching {
             val job =
                 jobInstantiator.instantiate(jobSpec.factoryKey, parameters, jobSpec.serializedData)
 
             job.runAttempt = jobSpec.runAttempt
             job.lastRunAttemptTime = jobSpec.lastRunAttemptTime
             job.nextBackoffInterval = jobSpec.nextBackoffInterval
-            job.setContext(application)
+            job.overwriteContext(application)
 
             return job
         }.getOrElse { e ->
@@ -434,12 +436,9 @@ class JobController<T : Job, U : Constraint>(
                 "Failed to instantiate job! Failing it and its dependencies without calling Job#onFailure. Crash imminent."
             );
 
-            val failIds = runBlocking {
-                jobStorage.getDependencySpecsThatDependOnJob(jobSpec.id)
-                    .asFlow()
-                    .map { spec -> spec.jobId }
-                    .toList()
-            }
+            val failIds = jobStorage.getDependencySpecsThatDependOnJob(jobSpec.id)
+                .map { spec -> spec.jobId }
+
 
             Log.e(TAG, "Failed " + failIds.size + " dependent jobs.")
             throw e
@@ -455,7 +454,7 @@ class JobController<T : Job, U : Constraint>(
             .setLifespan(jobSpec.lifespan)
             .setMaxAttempts(jobSpec.maxAttempts)
             .setQueue(jobSpec.queueKey)
-            .setConstraints(runBlocking { constraintSpecs.asFlow().map { it.factoryKey }.toList() })
+            .setConstraints(constraintSpecs.map { it.factoryKey })
             .setInputData(jobSpec.serializedInputData)
             .build()
     }

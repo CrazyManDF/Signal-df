@@ -2,21 +2,28 @@ package org.thoughtcrime.securesms.jobs
 
 import org.thoughtcrime.securesms.database.JobDatabase
 import org.thoughtcrime.securesms.jobmanager.Job
+import org.thoughtcrime.securesms.jobmanager.impl.NetworkConstraint
 import org.thoughtcrime.securesms.jobmanager.persistence.ConstraintSpec
 import org.thoughtcrime.securesms.jobmanager.persistence.DependencySpec
 import org.thoughtcrime.securesms.jobmanager.persistence.FullSpec
 import org.thoughtcrime.securesms.jobmanager.persistence.JobSpec
 import org.thoughtcrime.securesms.jobmanager.persistence.JobStorage
+import kotlin.time.Duration.Companion.minutes
 
 
 class FastJobStorage(private val jobDatabase: JobDatabase) : JobStorage {
 
+    private val jobs: MutableList<JobSpec> = mutableListOf()
+    private val constraintsByJobId: MutableMap<String, MutableList<ConstraintSpec>> = mutableMapOf()
+    private val dependenciesByJobId: MutableMap<String, MutableList<DependencySpec>> =
+        mutableMapOf()
+
     val fullSpec1 = FullSpec(
         jobSpec(
             id = "1",
-            factoryKey = "f1",
+            factoryKey = MessageFetchJob.KEY,
             queueKey = "q",
-            createTime = 1,
+            createTime = System.currentTimeMillis(),
             priority = Job.Parameters.PRIORITY_LOW
         ),
         emptyList(), emptyList()
@@ -40,46 +47,91 @@ class FastJobStorage(private val jobDatabase: JobDatabase) : JobStorage {
         ), emptyList(), emptyList()
     )
 
-    val fullSpecList = listOf(fullSpec1, fullSpec2, fullSpec3)
+    val fullSpecList = listOf(fullSpec1)
 
+    @Synchronized
     override fun init() {
-        TODO("Not yet implemented")
+//        jobs += fullSpecList[0].jobSpec
     }
 
+    @Synchronized
     override fun insertJobs(fullSpecs: List<FullSpec>) {
-        TODO("Not yet implemented")
+        val durable = fullSpecs.filterNot { it.isMemoryOnly }
+
+        if (durable.isNotEmpty()){
+//            jobDatabase.insertJobs(durable)
+        }
+
+        for (fullSpec in fullSpecs) {
+            jobs += fullSpec.jobSpec
+            constraintsByJobId[fullSpec.jobSpec.id] = fullSpec.constraintSpecs.toMutableList()
+            dependenciesByJobId[fullSpec.jobSpec.id] = fullSpec.dependencySpecs.toMutableList()
+        }
     }
 
+    @Synchronized
     override fun getJobSpec(id: String): JobSpec {
-        TODO("Not yet implemented")
+        return fullSpecList.map { it.jobSpec }.first { it.id == id }
     }
 
+    @Synchronized
     override fun getAllJobSpecs(): List<JobSpec> {
-        TODO("Not yet implemented")
+        return emptyList()
     }
 
+    @Synchronized
     override fun getPendingJobsWithNoDependenciesInCreatedOrder(currentTime: Long): List<JobSpec> {
-        return fullSpecList.map { it.jobSpec }
+      return  jobs.groupBy {
+            it.queueKey ?: it.id
+        }.asSequence().map { byQueueKey ->
+            byQueueKey.value
+                .sortedBy { it.createTime }
+                .maxByOrNull { it.priority }
+        }.filterNotNull().filter { job ->
+            dependenciesByJobId[job.id].isNullOrEmpty()
+        }.filterNot {
+            it.isRunning
+        }.filter { job ->
+            job.hasEligibleRunTime(currentTime)
+        }.sortedBy {
+            it.createTime
+        }.sortedByDescending {
+            it.priority
+        }.toList()
     }
 
+    @Synchronized
     override fun getJobsInQueue(queue: String): List<JobSpec> {
-        TODO("Not yet implemented")
+        return emptyList()
     }
 
     override fun getJobCountForFactory(factoryKey: String): Int {
-        TODO("Not yet implemented")
+        return -1
     }
 
     override fun getJobCountForFactoryAndQueue(factoryKey: String, queueKey: String): Int {
-        TODO("Not yet implemented")
+        return -1
     }
 
     override fun areQueuesEmpty(queueKeys: Set<String>): Boolean {
-        TODO("Not yet implemented")
+        return true
     }
 
+    @Synchronized
     override fun markJobAsRunning(id: String, currentTime: Long) {
-        TODO("Not yet implemented")
+        val job = getJobById(id)
+        if (job == null || !job.isMemoryOnly){
+            jobDatabase.markJobAsRunning(id, currentTime)
+        }
+
+        val iter = jobs.listIterator()
+
+        while (iter.hasNext()){
+            val current = iter.next()
+            if (current.id == id){
+                iter.set(current.copy(isRunning = true, lastRunAttemptTime = currentTime))
+            }
+        }
     }
 
     override fun updateJobAfterRetry(
@@ -89,52 +141,90 @@ class FastJobStorage(private val jobDatabase: JobDatabase) : JobStorage {
         nextBackoffInterval: Long,
         serializedData: ByteArray?
     ) {
-        TODO("Not yet implemented")
+
     }
 
     override fun updateAllJobsToBePending() {
-        TODO("Not yet implemented")
+
     }
 
     override fun updateJobs(jobSpecs: List<JobSpec>) {
-        TODO("Not yet implemented")
+
     }
 
-    override fun deleteJob(id: String) {
-        TODO("Not yet implemented")
+    @Synchronized
+    override fun deleteJob(jobIds: String) {
+        deleteJobs(listOf(jobIds))
     }
 
-    override fun deleteJobs(ids: List<String>) {
-        TODO("Not yet implemented")
+    @Synchronized
+    override fun deleteJobs(jobIds: List<String>) {
+        val durableIds = jobIds
+            .mapNotNull { getJobById(it) }
+            .filterNot { it.isMemoryOnly }
+            .map { it.id }
+
+        if (durableIds.isNotEmpty()) {
+//            jobDatabase.deleteJobs(durableIds)
+        }
+        val deleteIds = jobIds.toSet()
+        jobs.removeIf { deleteIds.contains(it.id) }
+
+        for (jobId in jobIds) {
+            constraintsByJobId.remove(jobId)
+            dependenciesByJobId.remove(jobId)
+
+            for (dependencyList in dependenciesByJobId.values) {
+                val iter = dependencyList.iterator()
+
+                while (iter.hasNext()) {
+                    if (iter.next().dependsOnJobId == jobId) {
+                        iter.remove()
+                    }
+                }
+            }
+        }
     }
 
+    @Synchronized
     override fun getConstraintSpecs(jobId: String): List<ConstraintSpec> {
-        TODO("Not yet implemented")
+        return listOf(
+            ConstraintSpec(fullSpec1.jobSpec.id, NetworkConstraint.KEY, true)
+        )
     }
 
     override fun getAllConstraintSpecs(): List<ConstraintSpec> {
-        TODO("Not yet implemented")
+        return emptyList()
+    }
+
+    private fun getJobById(jobId: String): JobSpec? {
+        return jobs.firstOrNull { it.id == jobId }
     }
 
     override fun getDependencySpecsThatDependOnJob(jobSpecId: String): List<DependencySpec> {
-        TODO("Not yet implemented")
+        return emptyList()
     }
 
     override fun getAllDependencySpecs(): List<DependencySpec> {
-        TODO("Not yet implemented")
+        return emptyList()
     }
 
+
+    private fun JobSpec.hasEligibleRunTime(currentTime: Long): Boolean {
+        return this.lastRunAttemptTime > currentTime ||
+                (this.lastRunAttemptTime + this.nextBackoffInterval) < currentTime
+    }
 
     private fun jobSpec(
         id: String,
         factoryKey: String,
         queueKey: String? = null,
-        createTime: Long = 1,
+        createTime: Long = System.currentTimeMillis(), // 创建时间
         lastRunAttemptTime: Long = 1,
         nextBackoffInterval: Long = 0,
         runAttempt: Int = 1,
         maxAttempts: Int = 1,
-        lifespan: Long = 1,
+        lifespan: Long = 1.minutes.inWholeMilliseconds, // 生命周期时间
         serializedData: ByteArray? = null,
         serializedInputData: ByteArray? = null,
         isRunning: Boolean = false,

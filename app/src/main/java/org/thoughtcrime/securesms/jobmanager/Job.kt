@@ -25,13 +25,14 @@ abstract class Job(val parameters: Parameters) {
 
     val maxAttempts = 0
 
-    protected lateinit var context: Context
+    protected var context: Context? = null
+
 
     fun getId(): String {
         return parameters.id
     }
 
-    fun setContext(context: Context) {
+    fun overwriteContext(context: Context) {
         this.context = context
     }
 
@@ -87,7 +88,7 @@ abstract class Job(val parameters: Parameters) {
     abstract fun onFailure()
 
 
-    interface Factory<T : Job> {
+    interface Factory<out T : Job> {
         fun create(parameters: Parameters, serializedData: ByteArray?): T
     }
 
@@ -242,7 +243,7 @@ abstract class Job(val parameters: Parameters) {
             /**
              * Specify the amount of time this job is allowed to be retried. Defaults to {@link #IMMORTAL}.
              */
-            fun  setLifespan(lifespan: Long ): Builder {
+            fun setLifespan(lifespan: Long): Builder {
                 this.lifespan = lifespan;
                 return this;
             }

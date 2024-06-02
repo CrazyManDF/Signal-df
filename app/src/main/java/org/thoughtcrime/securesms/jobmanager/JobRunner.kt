@@ -15,7 +15,6 @@ class JobRunner<T : Job, U : Constraint>(
 
     @Synchronized
     override fun run() {
-        super.run()
         while (true) {
             val job = jobController.pullNextEligibleJobForExecution(predicate)
             val result = run(job)
@@ -43,10 +42,10 @@ class JobRunner<T : Job, U : Constraint>(
 
     private fun run(job: Job): Job.Result {
         val runStartTime = System.currentTimeMillis()
-        Log.i(TAG, JobLogger.format(job, id.toString(), "Running job."))
+        Log.i(TAG, JobLogger.format(job, id.toString(), "运行 Running job."))
 
         if (isJobExpired(job)) {
-            Log.w(TAG, JobLogger.format(job, id.toString(), "Failing after surpassing its lifespan."))
+            Log.w(TAG, JobLogger.format(job, id.toString(), "过期 Failing after surpassing its lifespan."))
             return Job.Result.failure()
         }
         var result: Job.Result? = null

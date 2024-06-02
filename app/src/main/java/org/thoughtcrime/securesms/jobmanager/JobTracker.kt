@@ -52,16 +52,13 @@ class JobTracker() {
     fun onStateChange(job: Job, jobState: JobState) {
         getOrCreateJobInfo(job).jobState = jobState
 
-        runBlocking {
-            jobListeners.asFlow()
-                .filter {
-                    it.filter.matches(job)
-                }.map {
-                    it.listener
-                }.collect {
-                    listenerExecutor.execute { it.onStateChanged(job, jobState) }
-                }
-        }
+        jobListeners.filter {
+                it.filter.matches(job)
+            }.map {
+                it.listener
+            }.forEach {
+                listenerExecutor.execute { it.onStateChanged(job, jobState) }
+            }
     }
 
     @Synchronized

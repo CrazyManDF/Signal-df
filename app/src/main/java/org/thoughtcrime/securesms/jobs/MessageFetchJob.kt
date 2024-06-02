@@ -38,7 +38,7 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
     @Throws(IOException::class)
     override fun onRun() {
         runCatching {
-            val controller = ForegroundServiceController.create(context)
+            val controller = ForegroundServiceController.create(context!!)
             controller.awaitResult()
         }.onSuccess {
             Log.i(TAG, "Successfully pulled messages.")
@@ -123,7 +123,7 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
         fun awaitResult(): Boolean {
             isRunning = true
             val success = runCatching {
-                WebSocketDrainer.blockUntilDrainedAndProcessed();
+                WebSocketDrainer.blockUntilDrainedAndProcessed()
             }.getOrDefault(false)
             isRunning = false
             return success

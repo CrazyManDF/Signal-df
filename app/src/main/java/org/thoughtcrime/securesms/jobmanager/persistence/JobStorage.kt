@@ -51,10 +51,10 @@ interface JobStorage {
     fun updateJobs(jobSpecs: List<JobSpec>)
 
     @WorkerThread
-    fun deleteJob(id: String)
+    fun deleteJob(jobIds: String)
 
     @WorkerThread
-    fun deleteJobs(ids: List<String>)
+    fun deleteJobs(jobIds: List<String>)
 
     @WorkerThread
     fun getConstraintSpecs(jobId: String): List<ConstraintSpec>
