@@ -12,4 +12,12 @@ object Util {
             throw AssertionError(ie)
         }
     }
+
+    @JvmStatic
+    fun toIntExact(value: Long): Int {
+        if (value.toInt().toLong() != value) {
+            throw ArithmeticException("integer overflow")
+        }
+        return value.toInt()
+    }
 }

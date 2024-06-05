@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.square.wire)
 }
 
 android {
@@ -32,7 +33,30 @@ android {
     }
 }
 
+wire {
+    kotlin {
+        javaInterop = true
+    }
+
+    sourcePath {
+        srcDir("src/main/protowire")
+    }
+
+//    custom {
+//        // Comes from wire-handler jar project
+//        schemaHandlerFactoryClass = "org.signal.wire.Factory"
+//    }
+}
+
 dependencies {
+
+    implementation(libs.libsignal.client)
+    api(libs.square.okhttp3)
+    api(libs.square.okio)
+
+    api(libs.rxjava3.rxjava)
+    // wire
+    implementation(libs.wire.grpc.client)
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)

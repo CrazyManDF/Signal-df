@@ -16,7 +16,7 @@ import org.signal.core.util.concurrent.SignalExecutors
 import org.thoughtcrime.securesms.util.LRUCache
 import java.util.concurrent.Executor
 
-class JobTracker() {
+class JobTracker {
 
     private val jobInfos: LRUCache<String, JobInfo> = LRUCache(100)
     private val jobListeners: ArrayList<ListenerInfo> = arrayListOf()

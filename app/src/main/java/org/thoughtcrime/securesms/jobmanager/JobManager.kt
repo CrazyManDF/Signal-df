@@ -4,6 +4,8 @@ import android.app.Application
 import android.os.Build
 import androidx.annotation.GuardedBy
 import androidx.annotation.VisibleForTesting
+import androidx.annotation.WorkerThread
+import androidx.lifecycle.AtomicReference
 import org.signal.core.util.ThreadUtil
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.jobmanager.JobTracker.JobFilter
@@ -14,8 +16,11 @@ import org.thoughtcrime.securesms.util.Debouncer
 import org.thoughtcrime.securesms.util.Util
 import org.thoughtcrime.securesms.util.concurrent.FilteredExecutor
 import java.util.LinkedList
+import java.util.Optional
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.Volatile
 import kotlin.concurrent.withLock
@@ -125,6 +130,10 @@ class JobManager(
         Chain(this, listOf(job)).enqueue()
     }
 
+    private fun onEmptyQueue() {
+
+    }
+
     private fun runOnExecutor(runnable: Runnable) {
         executor.execute {
             waitUntilInitialized()
@@ -144,8 +153,34 @@ class JobManager(
         }
     }
 
-    private fun onEmptyQueue() {
 
+    @WorkerThread
+    fun runSynchronously(job: Job, timeout: Long): Optional<JobTracker.JobState> {
+        val latch = CountDownLatch(1)
+        val resultState = AtomicReference<JobTracker.JobState>()
+
+        addListener(job.getId(), object : JobListener {
+            override fun onStateChanged(job: Job, jobState: JobTracker.JobState) {
+                if (jobState.isComplete()) {
+                    removeListener(this)
+                    resultState.set(jobState)
+                    latch.countDown()
+                }
+            }
+        })
+
+        add(job)
+
+        try {
+            if (!latch.await(timeout, TimeUnit.MILLISECONDS)) {
+                return Optional.empty()
+            }
+        } catch (e: InterruptedException) {
+            Log.w(TAG, "Interrupted during runSynchronously()", e)
+            return Optional.empty()
+        }
+
+        return Optional.ofNullable(resultState.get())
     }
 
     class JobIdFilter(private val id: String) : JobFilter {

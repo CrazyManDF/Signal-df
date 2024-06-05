@@ -38,6 +38,7 @@ object SignalExecutors {
         30
     );
 
+    @JvmStatic
     fun newCachedSingleThreadExecutor(name: String, priority: Int): ExecutorService {
         val executor = ThreadPoolExecutor(1, 1, 15, TimeUnit.SECONDS, LinkedBlockingQueue(),
             ThreadFactory {

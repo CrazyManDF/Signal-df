@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    alias(libs.plugins.square.wire)
 }
 
 android {
@@ -18,6 +19,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+
+        buildConfigField("org.signal.libsignal.net.Network.Environment", "LIBSIGNAL_NET_ENV", "org.signal.libsignal.net.Network.Environment.PRODUCTION")
+        buildConfigField("String", "SIGNAL_AGENT", "\"OWA\"")
     }
 
     buildTypes {
@@ -30,6 +35,7 @@ android {
         }
     }
     compileOptions {
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -39,6 +45,7 @@ android {
     buildFeatures {
         viewBinding = true
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = libs.versions.composeCompiler.get()
@@ -48,6 +55,20 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+}
+
+wire {
+    kotlin {
+        javaInterop = true
+    }
+
+    sourcePath {
+        srcDir("src/main/protowire")
+    }
+//
+//    protoPath {
+//        srcDir("${project.rootDir}/libsignal-service/src/main/protowire")
+//    }
 }
 
 dependencies {
@@ -82,4 +103,12 @@ dependencies {
     implementation(libs.rxjava3.rxkotlin)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.process)
+
+    implementation(libs.libsignal.android)
+
+    implementation(libs.signal.aesgcmprovider)
+    implementation(libs.signal.ringrtc)
+    implementation(libs.signal.android.database.sqlcipher)
+
+    coreLibraryDesugaring(libs.android.tools.desugar)
 }

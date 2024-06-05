@@ -9,6 +9,7 @@ import kotlin.concurrent.Volatile
 
 object ThreadUtil {
 
+     @JvmField
     val PRIORITY_BACKGROUND_THREAD: Int = Process.THREAD_PRIORITY_BACKGROUND
     val PRIORITY_IMPORTANT_BACKGROUND_THREAD: Int = Process.THREAD_PRIORITY_DEFAULT + Process.THREAD_PRIORITY_LESS_FAVORABLE
     val PRIORITY_UI_BLOCKING_THREAD: Int = Process.THREAD_PRIORITY_DEFAULT
@@ -75,7 +76,7 @@ object ThreadUtil {
     }
 
     fun sleep(millis: Long) {
-        kotlin.runCatching {
+        runCatching {
             Thread.sleep(millis)
         }.getOrElse {
             throw AssertionError(it)

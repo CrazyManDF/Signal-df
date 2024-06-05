@@ -41,7 +41,11 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
             val controller = ForegroundServiceController.create(context!!)
             controller.awaitResult()
         }.onSuccess {
-            Log.i(TAG, "Successfully pulled messages.")
+            if (it) {
+                Log.i(TAG, "Successfully pulled messages.")
+            } else {
+                throw PushNetworkException("Failed to pull messages.")
+            }
         }.onFailure {
             throw PushNetworkException("Failed to pull messages.")
         }
@@ -64,7 +68,8 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
 
     }
 
-    class ForegroundServiceController(private val context: Context) : AppForegroundObserver.Listener, Closeable {
+    class ForegroundServiceController(private val context: Context) :
+        AppForegroundObserver.Listener, Closeable {
 
         private val notificationController = AtomicReference<AutoCloseable>()
 
@@ -109,14 +114,17 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
                         )
                     )
                 }.onFailure { e ->
-                    Log.w(TAG, "Failed to start foreground service. Running without a foreground service.")
+                    Log.w(
+                        TAG,
+                        "Failed to start foreground service. Running without a foreground service."
+                    )
                 }
             }
         }
 
-       override fun close() {
+        override fun close() {
             ApplicationDependencies.appForegroundObserver?.removeListener(this)
-           closeNotificationController()
+            closeNotificationController()
         }
 
 
@@ -134,7 +142,7 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
 
             runCatching {
                 controller.close()
-            }.getOrElse {e ->
+            }.getOrElse { e ->
                 Log.w(TAG, "Exception thrown while closing notification controller", e)
             }
         }
@@ -148,7 +156,7 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
         }
     }
 
-    class Factory : Job.Factory<MessageFetchJob>{
+    class Factory : Job.Factory<MessageFetchJob> {
         override fun create(parameters: Parameters, serializedData: ByteArray?): MessageFetchJob {
             return MessageFetchJob(parameters)
         }
