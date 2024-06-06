@@ -130,10 +130,11 @@ class MessageFetchJob(parameters: Parameters) : BaseJob(parameters) {
 
         fun awaitResult(): Boolean {
             isRunning = true
-            val success = runCatching {
+            val success = try {
                 WebSocketDrainer.blockUntilDrainedAndProcessed()
-            }.getOrDefault(false)
-            isRunning = false
+            } finally {
+                isRunning = false
+            }
             return success
         }
 

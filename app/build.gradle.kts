@@ -111,4 +111,5 @@ dependencies {
     implementation(libs.signal.android.database.sqlcipher)
 
     coreLibraryDesugaring(libs.android.tools.desugar)
+    implementation(libs.kotlinx.collections.immutable)
 }

@@ -130,6 +130,23 @@ class JobManager(
         Chain(this, listOf(job)).enqueue()
     }
 
+    fun addAllChains(chains: List<JobManager.Chain> ) {
+        if (chains.isEmpty()) {
+            return
+        }
+        for (chain in chains) {
+            for (jobList in chain.getJobListChain()) {
+                for (job in jobList) {
+                    jobTracker.onStateChange(job, JobTracker.JobState.PENDING)
+                }
+            }
+        }
+
+        runOnExecutor {
+            jobController.submitNewJobChain(chains.map { it.getJobListChain() }.map { it.first() })
+        }
+    }
+
     private fun onEmptyQueue() {
 
     }

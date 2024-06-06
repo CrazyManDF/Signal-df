@@ -33,7 +33,7 @@ class SignalWebSocketHealthMonitor(
             Preconditions.checkNotNull(signalWebSocket)
             Preconditions.checkArgument(signalWebSocket == null, "monitor can only be called once")
 
-            val a = signalWebSocket.webSocketState
+            val a = signalWebSocket!!.webSocketState
                 .subscribeOn(Schedulers.computation())
                 .observeOn(Schedulers.computation())
                 .distinctUntilChanged()

@@ -17,6 +17,10 @@ class SignalStore {
             return getInstance().internalValues!!
         }
 
+        fun proxy(): ProxyValues{
+
+        }
+
         @Volatile
         private var instance: SignalStore? = null
 

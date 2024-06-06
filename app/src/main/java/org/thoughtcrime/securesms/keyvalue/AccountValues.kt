@@ -454,85 +454,87 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
 
     /** Do not alter. If you need to migrate more stuff, create a new method. */
     private fun migrateFromSharedPrefsV1(context: Context) {
-        Log.i(TAG, "[V1] Migrating account values from shared prefs.")
-
-        putString(KEY_ACI, TextSecurePreferences.getStringPreference(context, "pref_local_uuid", null))
-        putString(KEY_E164, TextSecurePreferences.getStringPreference(context, "pref_local_number", null))
-        putString(KEY_SERVICE_PASSWORD, TextSecurePreferences.getStringPreference(context, "pref_gcm_password", null))
-        putBoolean(KEY_IS_REGISTERED, TextSecurePreferences.getBooleanPreference(context, "pref_gcm_registered", false))
-        putInteger(KEY_REGISTRATION_ID, TextSecurePreferences.getIntegerPreference(context, "pref_local_registration_id", 0))
-        putBoolean(KEY_FCM_ENABLED, !TextSecurePreferences.getBooleanPreference(context, "pref_gcm_disabled", false))
-        putString(KEY_FCM_TOKEN, TextSecurePreferences.getStringPreference(context, "pref_gcm_registration_id", null))
-        putInteger(KEY_FCM_TOKEN_VERSION, TextSecurePreferences.getIntegerPreference(context, "pref_gcm_registration_id_version", 0))
-        putLong(KEY_FCM_TOKEN_LAST_SET_TIME, TextSecurePreferences.getLongPreference(context, "pref_gcm_registration_id_last_set_time", 0))
+//        todo 注释掉
+//        Log.i(TAG, "[V1] Migrating account values from shared prefs.")
+//
+//        putString(KEY_ACI, TextSecurePreferences.getStringPreference(context, "pref_local_uuid", null))
+//        putString(KEY_E164, TextSecurePreferences.getStringPreference(context, "pref_local_number", null))
+//        putString(KEY_SERVICE_PASSWORD, TextSecurePreferences.getStringPreference(context, "pref_gcm_password", null))
+//        putBoolean(KEY_IS_REGISTERED, TextSecurePreferences.getBooleanPreference(context, "pref_gcm_registered", false))
+//        putInteger(KEY_REGISTRATION_ID, TextSecurePreferences.getIntegerPreference(context, "pref_local_registration_id", 0))
+//        putBoolean(KEY_FCM_ENABLED, !TextSecurePreferences.getBooleanPreference(context, "pref_gcm_disabled", false))
+//        putString(KEY_FCM_TOKEN, TextSecurePreferences.getStringPreference(context, "pref_gcm_registration_id", null))
+//        putInteger(KEY_FCM_TOKEN_VERSION, TextSecurePreferences.getIntegerPreference(context, "pref_gcm_registration_id_version", 0))
+//        putLong(KEY_FCM_TOKEN_LAST_SET_TIME, TextSecurePreferences.getLongPreference(context, "pref_gcm_registration_id_last_set_time", 0))
     }
 
     /** Do not alter. If you need to migrate more stuff, create a new method. */
     @SuppressLint("ApplySharedPref")
     @Suppress("DEPRECATION")
     private fun migrateFromSharedPrefsV2(context: Context) {
-        Log.i(TAG, "[V2] Migrating account values from shared prefs.")
-
-        val masterSecretPrefs: SharedPreferences = context.getSharedPreferences("SecureSMS-Preferences", 0)
-        val defaultPrefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-
-        val storeWriter: KeyValueStore.Writer = store.beginWrite()
-
-        if (masterSecretPrefs.hasStringData("pref_identity_public_v3")) {
-            Log.i(TAG, "Migrating modern identity key.")
-
-            val identityPublic = Base64.decode(masterSecretPrefs.getString("pref_identity_public_v3", null)!!)
-            val identityPrivate = Base64.decode(masterSecretPrefs.getString("pref_identity_private_v3", null)!!)
-
-            storeWriter
-                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, identityPublic)
-                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, identityPrivate)
-        } else if (masterSecretPrefs.hasStringData("pref_identity_public_curve25519")) {
-            Log.i(TAG, "Migrating legacy identity key.")
-
-            val masterCipher = MasterCipher(KeyCachingService.getMasterSecret(context))
-            val identityPublic = Base64.decode(masterSecretPrefs.getString("pref_identity_public_curve25519", null)!!)
-            val identityPrivate = masterCipher.decryptKey(Base64.decode(masterSecretPrefs.getString("pref_identity_private_curve25519", null)!!)).serialize()
-
-            storeWriter
-                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, identityPublic)
-                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, identityPrivate)
-        } else {
-            Log.w(TAG, "No pre-existing identity key! No migration.")
-        }
-
-        storeWriter
-            .putInteger(KEY_ACI_NEXT_SIGNED_PREKEY_ID, defaultPrefs.getInt("pref_next_signed_pre_key_id", SecureRandom().nextInt(Medium.MAX_VALUE)))
-            .putInteger(KEY_ACI_ACTIVE_SIGNED_PREKEY_ID, defaultPrefs.getInt("pref_active_signed_pre_key_id", -1))
-            .putInteger(KEY_ACI_NEXT_ONE_TIME_PREKEY_ID, defaultPrefs.getInt("pref_next_pre_key_id", SecureRandom().nextInt(Medium.MAX_VALUE)))
-            .putBoolean(KEY_ACI_SIGNED_PREKEY_REGISTERED, defaultPrefs.getBoolean("pref_signed_prekey_registered", false))
-            .commit()
-
-        masterSecretPrefs
-            .edit()
-            .remove("pref_identity_public_v3")
-            .remove("pref_identity_private_v3")
-            .remove("pref_identity_public_curve25519")
-            .remove("pref_identity_private_curve25519")
-            .commit()
-
-        defaultPrefs
-            .edit()
-            .remove("pref_local_uuid")
-            .remove("pref_identity_public_v3")
-            .remove("pref_next_signed_pre_key_id")
-            .remove("pref_active_signed_pre_key_id")
-            .remove("pref_signed_prekey_failure_count")
-            .remove("pref_signed_prekey_registered")
-            .remove("pref_next_pre_key_id")
-            .remove("pref_gcm_password")
-            .remove("pref_gcm_registered")
-            .remove("pref_local_registration_id")
-            .remove("pref_gcm_disabled")
-            .remove("pref_gcm_registration_id")
-            .remove("pref_gcm_registration_id_version")
-            .remove("pref_gcm_registration_id_last_set_time")
-            .commit()
+        // TODO: 注释掉
+//        Log.i(TAG, "[V2] Migrating account values from shared prefs.")
+//
+//        val masterSecretPrefs: SharedPreferences = context.getSharedPreferences("SecureSMS-Preferences", 0)
+//        val defaultPrefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
+//
+//        val storeWriter: KeyValueStore.Writer = store.beginWrite()
+//
+//        if (masterSecretPrefs.hasStringData("pref_identity_public_v3")) {
+//            Log.i(TAG, "Migrating modern identity key.")
+//
+//            val identityPublic = Base64.decode(masterSecretPrefs.getString("pref_identity_public_v3", null)!!)
+//            val identityPrivate = Base64.decode(masterSecretPrefs.getString("pref_identity_private_v3", null)!!)
+//
+//            storeWriter
+//                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, identityPublic)
+//                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, identityPrivate)
+//        } else if (masterSecretPrefs.hasStringData("pref_identity_public_curve25519")) {
+//            Log.i(TAG, "Migrating legacy identity key.")
+//
+//            val masterCipher = MasterCipher(KeyCachingService.getMasterSecret(context))
+//            val identityPublic = Base64.decode(masterSecretPrefs.getString("pref_identity_public_curve25519", null)!!)
+//            val identityPrivate = masterCipher.decryptKey(Base64.decode(masterSecretPrefs.getString("pref_identity_private_curve25519", null)!!)).serialize()
+//
+//            storeWriter
+//                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, identityPublic)
+//                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, identityPrivate)
+//        } else {
+//            Log.w(TAG, "No pre-existing identity key! No migration.")
+//        }
+//
+//        storeWriter
+//            .putInteger(KEY_ACI_NEXT_SIGNED_PREKEY_ID, defaultPrefs.getInt("pref_next_signed_pre_key_id", SecureRandom().nextInt(Medium.MAX_VALUE)))
+//            .putInteger(KEY_ACI_ACTIVE_SIGNED_PREKEY_ID, defaultPrefs.getInt("pref_active_signed_pre_key_id", -1))
+//            .putInteger(KEY_ACI_NEXT_ONE_TIME_PREKEY_ID, defaultPrefs.getInt("pref_next_pre_key_id", SecureRandom().nextInt(Medium.MAX_VALUE)))
+//            .putBoolean(KEY_ACI_SIGNED_PREKEY_REGISTERED, defaultPrefs.getBoolean("pref_signed_prekey_registered", false))
+//            .commit()
+//
+//        masterSecretPrefs
+//            .edit()
+//            .remove("pref_identity_public_v3")
+//            .remove("pref_identity_private_v3")
+//            .remove("pref_identity_public_curve25519")
+//            .remove("pref_identity_private_curve25519")
+//            .commit()
+//
+//        defaultPrefs
+//            .edit()
+//            .remove("pref_local_uuid")
+//            .remove("pref_identity_public_v3")
+//            .remove("pref_next_signed_pre_key_id")
+//            .remove("pref_active_signed_pre_key_id")
+//            .remove("pref_signed_prekey_failure_count")
+//            .remove("pref_signed_prekey_registered")
+//            .remove("pref_next_pre_key_id")
+//            .remove("pref_gcm_password")
+//            .remove("pref_gcm_registered")
+//            .remove("pref_local_registration_id")
+//            .remove("pref_gcm_disabled")
+//            .remove("pref_gcm_registration_id")
+//            .remove("pref_gcm_registration_id_version")
+//            .remove("pref_gcm_registration_id_last_set_time")
+//            .commit()
     }
 
     private fun SharedPreferences.hasStringData(key: String): Boolean {

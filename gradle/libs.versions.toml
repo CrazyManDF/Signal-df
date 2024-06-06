@@ -31,6 +31,7 @@ signalRingrtc = "2.41.0"
 signalAndroidDatabaseSqlcipher = "4.5.4-S2"
 wireGrpcClient = "4.9.9"
 androidDesugar = "2.0.4"
+kotlinxImmutable = "0.3.5"
 
 [libraries]
 # 1st Party
@@ -39,6 +40,9 @@ libsignal-android = { group = "org.signal", name = "libsignal-android", version.
 signal-aesgcmprovider = { group = "org.signal", name = "aesgcmprovider", version.ref = "signalAesgcmprovider"}
 signal-ringrtc = { group = "org.signal", name = "ringrtc-android", version.ref = "signalRingrtc"}
 signal-android-database-sqlcipher = { group = "org.signal", name = "sqlcipher-android", version.ref = "signalAndroidDatabaseSqlcipher"}
+
+# Third Party
+kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutable"}
 
 # Desugaring
 android-tools-desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugar"}
