@@ -32,6 +32,8 @@ signalAndroidDatabaseSqlcipher = "4.5.4-S2"
 wireGrpcClient = "4.9.9"
 androidDesugar = "2.0.4"
 kotlinxImmutable = "0.3.5"
+androidxSqlite = "2.4.0"
+sqlcipherAndroid = "4.6.0"
 
 [libraries]
 # 1st Party
@@ -82,6 +84,9 @@ square-okio = {module = "com.squareup.okio:okio", version.ref = "squareOkio"}
 # wire
 wire-grpc-client = { module = "com.squareup.wire:wire-grpc-client", version.ref = "wireGrpcClient" }
 wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wireGrpcClient" }
+
+androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite"}
+sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

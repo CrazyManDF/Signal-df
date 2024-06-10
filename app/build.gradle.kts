@@ -112,4 +112,6 @@ dependencies {
 
     coreLibraryDesugaring(libs.android.tools.desugar)
     implementation(libs.kotlinx.collections.immutable)
+    implementation(libs.androidx.sqlite)
+    implementation(libs.sqlcipher.android)
 }

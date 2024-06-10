@@ -44,4 +44,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.rxjava3.rxjava)
+    implementation(libs.androidx.sqlite)
 }

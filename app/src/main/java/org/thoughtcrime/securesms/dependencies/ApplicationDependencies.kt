@@ -2,6 +2,7 @@ package org.thoughtcrime.securesms.dependencies
 
 import android.app.Application
 import androidx.annotation.VisibleForTesting
+import org.thoughtcrime.securesms.database.DatabaseObserver
 import org.thoughtcrime.securesms.jobmanager.JobManager
 import org.thoughtcrime.securesms.messages.IncomingMessageObserver
 import org.thoughtcrime.securesms.push.SignalServiceNetworkAccess
@@ -73,6 +74,10 @@ object ApplicationDependencies {
         provider!!.provideLibsignalNetwork(getSignalServiceNetworkAccess().getConfiguration())
     }
 
+    val databaseObserver: DatabaseObserver  by lazy(LOCK) {
+        provider!!.provideDatabaseObserver()
+    }
+
     fun getSignalServiceNetworkAccess(): SignalServiceNetworkAccess {
         return provider!!.provideSignalServiceNetworkAccess()
     }
@@ -93,6 +98,7 @@ object ApplicationDependencies {
         ): SignalWebSocket
 
         fun provideLibsignalNetwork(config: SignalServiceConfiguration): LibSignalNetwork
+        fun provideDatabaseObserver(): DatabaseObserver
 
     }
 
