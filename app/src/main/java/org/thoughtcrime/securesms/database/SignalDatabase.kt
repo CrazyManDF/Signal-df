@@ -29,6 +29,7 @@ class SignalDatabase(
 ) {
 
     val messageTable: MessageTable = MessageTable(context, this)
+    val recipientTable: RecipientTable = RecipientTable(context, this)
 
     override fun onOpen(db: net.zetetic.database.sqlcipher.SQLiteDatabase) {
         db.setForeignKeyConstraintsEnabled(true)
@@ -155,5 +156,14 @@ class SignalDatabase(
 
         val message: MessageTable
             get() = instance!!.messageTable
+
+        val messages: MessageTable
+            get() = instance!!.messageTable
+
+//        val messageLog: MessageSendLogTables
+//            get() = instance!!.messageSendLogTables
+
+        val recipients: RecipientTable
+            get() = instance!!.recipientTable
     }
 }

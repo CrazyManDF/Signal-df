@@ -1,210 +1,172 @@
-package org.thoughtcrime.securesms.keyvalue;
+package org.thoughtcrime.securesms.keyvalue
 
-import androidx.annotation.AnyThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
+import androidx.annotation.AnyThread
+import androidx.annotation.WorkerThread
+import org.signal.core.util.ThreadUtil
+import org.signal.core.util.concurrent.SignalExecutors
+import org.signal.core.util.logging.Log
+import java.util.concurrent.CountDownLatch
 
-import org.signal.core.util.ThreadUtil;
-import org.signal.core.util.concurrent.SignalExecutors;
-import org.signal.core.util.logging.Log;
-import org.thoughtcrime.securesms.util.SignalUncaughtExceptionHandler;
+class KeyValueStore(private val storage: KeyValuePersistentStorage) : KeyValueReader {
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
+    private val executor = SignalExecutors.newCachedSingleThreadExecutor(
+        "signal-KeyValueStore",
+        ThreadUtil.PRIORITY_BACKGROUND_THREAD
+    )
 
-/**
- * An replacement for {@link android.content.SharedPreferences} that stores key-value pairs in our
- * encrypted database.
- *
- * Implemented as a write-through cache that is safe to read and write to on the main thread.
- *
- * Writes are enqueued on a separate executor, but writes are finished up in
- * {@link SignalUncaughtExceptionHandler}, meaning all write should finish barring a native crash
- * or the system killing us unexpectedly (i.e. a force-stop).
- */
-public final class KeyValueStore implements KeyValueReader {
+    private var dataSet: KeyValueDataSet? = null
 
-    private static final String TAG = Log.tag(KeyValueStore.class);
-
-    private final ExecutorService           executor;
-    private final KeyValuePersistentStorage storage;
-
-    private KeyValueDataSet dataSet;
-
-    public KeyValueStore(@NonNull KeyValuePersistentStorage storage) {
-        this.executor = SignalExecutors.newCachedSingleThreadExecutor("signal-KeyValueStore", ThreadUtil.PRIORITY_BACKGROUND_THREAD);
-        this.storage  = storage;
+    @AnyThread
+    override fun getBlob(key: String, defaultValue: ByteArray?): ByteArray? {
+        initializeIfNecessary()
+        return dataSet!!.getBlob(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized byte[] getBlob(@NonNull String key, byte[] defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getBlob(key, defaultValue);
+    override fun getBoolean(key: String, defaultValue: Boolean): Boolean {
+        initializeIfNecessary()
+        return dataSet!!.getBoolean(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized boolean getBoolean(@NonNull String key, boolean defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getBoolean(key, defaultValue);
+    override fun getFloat(key: String, defaultValue: Float): Float {
+        initializeIfNecessary()
+        return dataSet!!.getFloat(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized float getFloat(@NonNull String key, float defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getFloat(key, defaultValue);
+    override fun getInteger(key: String, defaultValue: Int): Int {
+        initializeIfNecessary()
+        return dataSet!!.getInteger(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized int getInteger(@NonNull String key, int defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getInteger(key, defaultValue);
+    override fun getLong(key: String, defaultValue: Long): Long {
+        initializeIfNecessary()
+        return dataSet!!.getLong(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized long getLong(@NonNull String key, long defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getLong(key, defaultValue);
+    override fun getString(key: String, defaultValue: String?): String? {
+        initializeIfNecessary()
+        return dataSet!!.getString(key, defaultValue)
     }
 
     @AnyThread
-    @Override
-    public synchronized String getString(@NonNull String key, String defaultValue) {
-        initializeIfNecessary();
-        return dataSet.getString(key, defaultValue);
+    override fun containsKey(key: String): Boolean {
+        initializeIfNecessary()
+        return dataSet!!.containsKey(key)
     }
 
     @AnyThread
-    @Override
-    public synchronized boolean containsKey(@NonNull String key) {
-        initializeIfNecessary();
-        return dataSet.containsKey(key);
+    fun beginWrite(): Writer {
+        return Writer()
     }
 
-    /**
-     * @return A writer that allows writing and removing multiple entries in a single atomic
-     *         transaction.
-     */
     @AnyThread
-    @NonNull Writer beginWrite() {
-        return new Writer();
+    @Synchronized
+    fun beginRead(): KeyValueReader {
+        initializeIfNecessary()
+
+        val copy = KeyValueDataSet()
+        copy.putAll(dataSet!!)
+        return copy
     }
 
-    /**
-     * @return A reader that lets you read from an immutable snapshot of the store, ensuring that data
-     *         is consistent between reads. If you're only reading a single value, it is more
-     *         efficient to use the various get* methods instead.
-     */
     @AnyThread
-    synchronized @NonNull KeyValueReader beginRead() {
-        initializeIfNecessary();
+    @Synchronized
+    fun blockUntilAllWritesFinished() {
+        val latch = CountDownLatch(1)
 
-        KeyValueDataSet copy = new KeyValueDataSet();
-        copy.putAll(dataSet);
+        executor.execute { latch.countDown() }
 
-        return copy;
-    }
-
-    /**
-     * Ensures that any pending writes (such as those made via {@link Writer#apply()}) are finished.
-     */
-    @AnyThread
-    synchronized void blockUntilAllWritesFinished() {
-        CountDownLatch latch = new CountDownLatch(1);
-
-        executor.execute(latch::countDown);
-
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            Log.w(TAG, "Failed to wait for all writes.");
+        kotlin.runCatching {
+            latch.await()
+        }.getOrElse {
+            it.printStackTrace()
+            Log.w(TAG, "Failed to wait for all writes.")
         }
     }
 
-    /**
-     * Forces the store to re-fetch all of it's data from the database.
-     */
-    synchronized void resetCache() {
-        dataSet = null;
-        initializeIfNecessary();
+    @Synchronized
+    fun resetCache() {
+        dataSet = null
+        initializeIfNecessary()
     }
 
-    private synchronized void write(@NonNull KeyValueDataSet newDataSet, @NonNull Collection<String> removes) {
-        initializeIfNecessary();
+    private fun write(newDataSet: KeyValueDataSet, removes: Collection<String>) {
+        initializeIfNecessary()
 
-        dataSet.putAll(newDataSet);
-        dataSet.removeAll(removes);
+        dataSet!!.putAll(newDataSet)
+        dataSet!!.removeAll(removes)
 
-        executor.execute(() -> storage.writeDataSet(newDataSet, removes));
+        executor.execute { storage.writeDataSet(newDataSet, removes) }
+    }
+    
+    private fun initializeIfNecessary() {
+        if (dataSet != null) return
+        this.dataSet = storage.dataSet
     }
 
-    private void initializeIfNecessary() {
-        if (dataSet != null) return;
-        this.dataSet = storage.getDataSet();
-    }
+    inner class Writer {
+        private val dataSet = KeyValueDataSet()
 
-    class Writer {
-        private final KeyValueDataSet dataSet = new KeyValueDataSet();
-        private final Set<String>     removes = new HashSet<>();
+        private val removes = hashSetOf<String>()
 
-        @NonNull Writer putBlob(@NonNull String key, @Nullable byte[] value) {
-            dataSet.putBlob(key, value);
-            return this;
+        fun putBlob(key: String, value: ByteArray?): Writer {
+            dataSet.putBlob(key, value)
+            return this
         }
 
-        @NonNull Writer putBoolean(@NonNull String key, boolean value) {
-            dataSet.putBoolean(key, value);
-            return this;
+        fun putBoolean(key: String, value: Boolean): Writer {
+            dataSet.putBoolean(key, value)
+            return this
         }
 
-        @NonNull Writer putFloat(@NonNull String key, float value) {
-            dataSet.putFloat(key, value);
-            return this;
+        fun putFloat(key: String, value: Float): Writer {
+            dataSet.putFloat(key, value)
+            return this
         }
 
-        @NonNull Writer putInteger(@NonNull String key, int value) {
-            dataSet.putInteger(key, value);
-            return this;
+        fun putInteger(key: String, value: Int): Writer {
+            dataSet.putInteger(key, value)
+            return this
         }
 
-        @NonNull Writer putLong(@NonNull String key, long value) {
-            dataSet.putLong(key, value);
-            return this;
+        fun putLong(key: String, value: Long): Writer {
+            dataSet.putLong(key, value)
+            return this
         }
 
-        @NonNull Writer putString(@NonNull String key, String value) {
-            dataSet.putString(key, value);
-            return this;
+        fun putString(key: String, value: String?): Writer {
+            dataSet.putString(key, value)
+            return this
         }
 
-        @NonNull Writer remove(@NonNull String key) {
-            removes.add(key);
-            return this;
+        fun remove(key: String): Writer {
+            removes.add(key)
+            return this
         }
 
         @AnyThread
-        void apply() {
-            for (String key : removes) {
+        fun apply() {
+            for (key in removes) {
                 if (dataSet.containsKey(key)) {
-                    throw new IllegalStateException("Tried to remove a key while also setting it!");
+                    throw IllegalStateException("Tried to remove a key while also setting it!")
                 }
             }
 
-            write(dataSet, removes);
+            write(dataSet, removes)
         }
 
         @WorkerThread
-        void commit() {
-            apply();
-            blockUntilAllWritesFinished();
+        fun commit() {
+            apply()
+            blockUntilAllWritesFinished()
         }
+    }
+
+    companion object {
+        private val TAG = Log.tag(KeyValueStore::class.java)
     }
 }

@@ -1,5 +1,8 @@
 package org.thoughtcrime.securesms.crypto
 
+import org.thoughtcrime.securesms.util.JsonUtils
+import java.io.IOException
+
 class AttachmentSecret {
 
     var classicCipherKey: ByteArray? = null
@@ -12,8 +15,8 @@ class AttachmentSecret {
 
     constructor()
     constructor(
-        classicCipherKey: ByteArray,
-        classicMacKey: ByteArray,
+        classicCipherKey: ByteArray?,
+        classicMacKey: ByteArray?,
         modernKey: ByteArray
     ) {
         this.classicCipherKey = classicCipherKey
@@ -25,8 +28,15 @@ class AttachmentSecret {
         return ""
     }
 
-//    fun fromString(value: String): AttachmentSecret {
-//
-//    }
+    companion object {
+
+        fun fromString(value: String): AttachmentSecret {
+            try {
+                return JsonUtils.fromJson(value, AttachmentSecret::class.java)
+            } catch (e: IOException) {
+                throw AssertionError(e)
+            }
+        }
+    }
 
 }

@@ -1,24 +1,27 @@
 package org.thoughtcrime.securesms.keyvalue
 
+import org.thoughtcrime.securesms.dependencies.ApplicationDependencies
 import kotlin.concurrent.Volatile
 
-class SignalStore {
+class SignalStore(store: KeyValueStore) {
 
-    private val accountValues: AccountValues? = AccountValues()
+    private val accountValues: AccountValues = AccountValues(store)
 
-    private val internalValues: InternalValues? = InternalValues()
+    private val internalValues: InternalValues = InternalValues(store)
+
+    private val proxyValues: ProxyValues = ProxyValues(store)
 
     companion object {
         internal fun account(): AccountValues {
-            return getInstance().accountValues!!
+            return getInstance().accountValues
         }
 
         fun internalValues(): InternalValues {
-            return getInstance().internalValues!!
+            return getInstance().internalValues
         }
 
-        fun proxy(): ProxyValues{
-
+        fun proxy(): ProxyValues {
+            return getInstance().proxyValues
         }
 
         @Volatile
@@ -28,7 +31,11 @@ class SignalStore {
             if (instance == null) {
                 synchronized(SignalStore::class.java) {
                     if (instance == null) {
-                        instance = SignalStore()
+                        instance = SignalStore(
+                            KeyValueStore(
+                                KeyValueDatabase.getInstance(ApplicationDependencies.getApplication())
+                            )
+                        )
                     }
                 }
             }

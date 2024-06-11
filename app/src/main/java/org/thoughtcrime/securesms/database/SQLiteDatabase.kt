@@ -14,7 +14,22 @@ import java.util.Locale
 
 class SQLiteDatabase(private val wrapped: SQLiteDatabase) : SupportSQLiteDatabase {
 
+    companion object {
+        const val CONFLICT_ROLLBACK: Int = 1
+        const val CONFLICT_ABORT: Int = 2
+        const val CONFLICT_FAIL: Int = 3
+        const val CONFLICT_IGNORE: Int = 4
+        const val CONFLICT_REPLACE: Int = 5
+        const val CONFLICT_NONE: Int = 0
+
+        private const val KEY_QUERY = "query"
+        private const val KEY_TABLE = "table"
+        private const val KEY_THREAD = "thread"
+        private const val NAME_LOCK = "LOCK"
+    }
+
 //    private val tracer = Tracer
+
 
     fun runPostSuccessfulTransaction(dedupeKey: String, task: Runnable) {
         if (wrapped.inTransaction()){
@@ -29,8 +44,57 @@ class SQLiteDatabase(private val wrapped: SQLiteDatabase) : SupportSQLiteDatabas
     }
 
     fun rawQuery(sql: String, selectionArgs: Array<String>?): Cursor {
-        Database
+//        DatabaseMonitor.onSql(sql, selectionArgs)
+        return traceSql<Cursor>("rawQuery(2a)", sql, false,
+            object : Returnable<Cursor> {
+                override fun run(): Cursor {
+                    return wrapped.rawQuery(
+                        sql,
+                        selectionArgs
+                    )
+                }
+            })
     }
+
+    private fun <E> traceSql(
+        methodName: String,
+        query: String?,
+        locked: Boolean,
+        returnable: Returnable<E>
+    ): E {
+        return traceSql(methodName, null, query, locked, returnable)
+    }
+
+    private fun <E> traceSql(methodName: String , table: String? , query: String? , locked: Boolean ,returnable: Returnable<E> ): E {
+        if (locked) {
+//            traceLockStart()
+        }
+        val params: MutableMap<String, String> = HashMap()
+        if (query != null) {
+            params[KEY_QUERY] = query
+        }
+        if (table != null) {
+            params[KEY_TABLE] = table
+        }
+
+//        tracer.start(methodName, params)
+        val result = returnable.run()
+        if (result is Cursor) {
+            // Triggers filling the window (which is about to be done anyway), but lets us capture that time inside the trace
+            result.count
+        }
+//        tracer.end(methodName)
+        if (locked) {
+//            traceLockEnd()
+        }
+
+        return result
+    }
+
+    private interface Returnable<E> {
+        fun run(): E
+    }
+
 
     override val attachedDbs: List<Pair<String, String>>?
         get() = TODO("Not yet implemented")

@@ -26,7 +26,9 @@ import org.thoughtcrime.securesms.jobs.UnableToStartException
 import org.thoughtcrime.securesms.keyvalue.SignalStore
 import org.thoughtcrime.securesms.messages.protocol.BufferedProtocolStore
 import org.thoughtcrime.securesms.notifications.NotificationChannels
+import org.thoughtcrime.securesms.recipients.RecipientId
 import org.thoughtcrime.securesms.util.AppForegroundObserver
+import org.thoughtcrime.securesms.util.SignalLocalMetrics
 import org.whispersystems.signalservice.api.SignalWebSocket
 import org.whispersystems.signalservice.api.messages.EnvelopeResponse
 import org.whispersystems.signalservice.api.push.ServiceId
@@ -200,7 +202,7 @@ class IncomingMessageObserver(private val context: Application) {
         val registered = SignalStore.account().isRegistered
         val fcmEnabled = SignalStore.account().fcmEnabled
         val hasNetwork = NetworkConstraint.isMet(context)
-        val hasProxy = SignalStore.proxy().isProxyEnabled
+        val hasProxy = SignalStore.proxy().isProxyEnabled()
         val forceWebsocket = SignalStore.internalValues().isWebsocketModeForced
 
         val lastInteractionString =
@@ -400,7 +402,7 @@ class IncomingMessageObserver(private val context: Application) {
                 }
             }
             is MessageDecryptor.Result.Error -> {
-                return result.followUpOperations + FollowUpOperation {
+                return result.followUpOperations + MessageDecryptor.FollowUpOperation {
                     PushProcessMessageErrorJob(
                         result.toMessageState(),
                         result.errorMetadata.toExceptionMetadata(),
@@ -436,10 +438,10 @@ class IncomingMessageObserver(private val context: Application) {
             senderId,
             System.currentTimeMillis()
         )
-        SignalDatabase.messageLog.deleteEntryForRecipient(
-            envelope.timestamp!!,
-            senderId,
-            envelope.sourceDevice!!
+//        SignalDatabase.messageLog.deleteEntryForRecipient(
+//            envelope.timestamp!!,
+//            senderId,
+//            envelope.sourceDevice!!
         )
     }
 

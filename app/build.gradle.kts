@@ -114,4 +114,7 @@ dependencies {
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.androidx.sqlite)
     implementation(libs.sqlcipher.android)
+    implementation(libs.androidx.preference)
+    implementation(libs.jackson.core)
+    implementation(libs.jackson.module)
 }

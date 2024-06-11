@@ -5,30 +5,30 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.preference.PreferenceManager
 import androidx.annotation.VisibleForTesting
-import org.signal.core.util.Base64
+//import org.signal.core.util.Base64
 import org.signal.core.util.logging.Log
 import org.signal.libsignal.protocol.IdentityKey
 import org.signal.libsignal.protocol.IdentityKeyPair
 import org.signal.libsignal.protocol.ecc.Curve
 import org.signal.libsignal.protocol.util.Medium
-import org.thoughtcrime.securesms.crypto.IdentityKeyUtil
-import org.thoughtcrime.securesms.crypto.MasterCipher
-import org.thoughtcrime.securesms.crypto.ProfileKeyUtil
-import org.thoughtcrime.securesms.crypto.storage.PreKeyMetadataStore
+//import org.thoughtcrime.securesms.crypto.IdentityKeyUtil
+//import org.thoughtcrime.securesms.crypto.MasterCipher
+//import org.thoughtcrime.securesms.crypto.ProfileKeyUtil
+//import org.thoughtcrime.securesms.crypto.storage.PreKeyMetadataStore
 import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.dependencies.ApplicationDependencies
-import org.thoughtcrime.securesms.jobs.PreKeysSyncJob
-import org.thoughtcrime.securesms.recipients.Recipient
-import org.thoughtcrime.securesms.service.KeyCachingService
+//import org.thoughtcrime.securesms.jobs.PreKeysSyncJob
+//import org.thoughtcrime.securesms.recipients.Recipient
+//import org.thoughtcrime.securesms.service.KeyCachingService
 import org.thoughtcrime.securesms.util.TextSecurePreferences
 import org.thoughtcrime.securesms.util.Util
 import org.whispersystems.signalservice.api.push.ServiceId.ACI
 import org.whispersystems.signalservice.api.push.ServiceId.PNI
 import org.whispersystems.signalservice.api.push.ServiceIds
 import org.whispersystems.signalservice.api.push.SignalServiceAddress
-import org.whispersystems.signalservice.api.push.UsernameLinkComponents
+//import org.whispersystems.signalservice.api.push.UsernameLinkComponents
 import org.whispersystems.signalservice.api.util.UuidUtil
-import org.whispersystems.signalservice.api.util.toByteArray
+//import org.whispersystems.signalservice.api.util.toByteArray
 import java.security.SecureRandom
 
 internal class AccountValues internal constructor(store: KeyValueStore) : SignalStoreValues(store) {
@@ -102,9 +102,9 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
         }
     }
 
-    public override fun onFirstEverAppLaunch() = Unit
+    override fun onFirstEverAppLaunch() = Unit
 
-    public override fun getKeysToIncludeInBackup(): List<String> {
+    override fun getKeysToIncludeInBackup(): List<String> {
         return listOf(
             KEY_ACI_IDENTITY_PUBLIC_KEY,
             KEY_ACI_IDENTITY_PRIVATE_KEY,
@@ -206,12 +206,12 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
 
             Log.i(TAG, "Generating a new ACI identity key pair.")
 
-            val key: IdentityKeyPair = IdentityKeyUtil.generateIdentityKeyPair()
-            store
-                .beginWrite()
-                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, key.publicKey.serialize())
-                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, key.privateKey.serialize())
-                .commit()
+//            val key: IdentityKeyPair = IdentityKeyUtil.generateIdentityKeyPair()
+//            store
+//                .beginWrite()
+//                .putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, key.publicKey.serialize())
+//                .putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, key.privateKey.serialize())
+//                .commit()
         }
     }
 
@@ -229,12 +229,12 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
 
             Log.i(TAG, "Generating a new PNI identity key pair.")
 
-            val key: IdentityKeyPair = IdentityKeyUtil.generateIdentityKeyPair()
-            store
-                .beginWrite()
-                .putBlob(KEY_PNI_IDENTITY_PUBLIC_KEY, key.publicKey.serialize())
-                .putBlob(KEY_PNI_IDENTITY_PRIVATE_KEY, key.privateKey.serialize())
-                .commit()
+//            val key: IdentityKeyPair = IdentityKeyUtil.generateIdentityKeyPair()
+//            store
+//                .beginWrite()
+//                .putBlob(KEY_PNI_IDENTITY_PUBLIC_KEY, key.publicKey.serialize())
+//                .putBlob(KEY_PNI_IDENTITY_PRIVATE_KEY, key.privateKey.serialize())
+//                .commit()
         }
     }
 
@@ -287,63 +287,63 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
         }
     }
 
-    /** Only to be used when restoring an identity public key from an old backup */
-    fun restoreLegacyIdentityPublicKeyFromBackup(base64: String) {
-        Log.w(TAG, "Restoring legacy identity public key from backup.")
-        putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, Base64.decode(base64))
-    }
+//    /** Only to be used when restoring an identity public key from an old backup */
+//    fun restoreLegacyIdentityPublicKeyFromBackup(base64: String) {
+//        Log.w(TAG, "Restoring legacy identity public key from backup.")
+//        putBlob(KEY_ACI_IDENTITY_PUBLIC_KEY, Base64.decode(base64))
+//    }
+//
+//    /** Only to be used when restoring an identity private key from an old backup */
+//    fun restoreLegacyIdentityPrivateKeyFromBackup(base64: String) {
+//        Log.w(TAG, "Restoring legacy identity private key from backup.")
+//        putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, Base64.decode(base64))
+//    }
 
-    /** Only to be used when restoring an identity private key from an old backup */
-    fun restoreLegacyIdentityPrivateKeyFromBackup(base64: String) {
-        Log.w(TAG, "Restoring legacy identity private key from backup.")
-        putBlob(KEY_ACI_IDENTITY_PRIVATE_KEY, Base64.decode(base64))
-    }
+//    @get:JvmName("aciPreKeys")
+//    val aciPreKeys: PreKeyMetadataStore = object : PreKeyMetadataStore {
+//        override var nextSignedPreKeyId: Int by integerValue(KEY_ACI_NEXT_SIGNED_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var activeSignedPreKeyId: Int by integerValue(KEY_ACI_ACTIVE_SIGNED_PREKEY_ID, -1)
+//        override var isSignedPreKeyRegistered: Boolean by booleanValue(KEY_ACI_SIGNED_PREKEY_REGISTERED, false)
+//        override var lastSignedPreKeyRotationTime: Long by longValue(KEY_ACI_LAST_SIGNED_PREKEY_ROTATION_TIME, System.currentTimeMillis() - PreKeysSyncJob.REFRESH_INTERVAL)
+//        override var nextEcOneTimePreKeyId: Int by integerValue(KEY_ACI_NEXT_ONE_TIME_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var nextKyberPreKeyId: Int by integerValue(KEY_ACI_NEXT_KYBER_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var lastResortKyberPreKeyId: Int by integerValue(KEY_ACI_LAST_RESORT_KYBER_PREKEY_ID, -1)
+//        override var lastResortKyberPreKeyRotationTime: Long by longValue(KEY_ACI_LAST_RESORT_KYBER_PREKEY_ROTATION_TIME, 0)
+//    }
 
-    @get:JvmName("aciPreKeys")
-    val aciPreKeys: PreKeyMetadataStore = object : PreKeyMetadataStore {
-        override var nextSignedPreKeyId: Int by integerValue(KEY_ACI_NEXT_SIGNED_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var activeSignedPreKeyId: Int by integerValue(KEY_ACI_ACTIVE_SIGNED_PREKEY_ID, -1)
-        override var isSignedPreKeyRegistered: Boolean by booleanValue(KEY_ACI_SIGNED_PREKEY_REGISTERED, false)
-        override var lastSignedPreKeyRotationTime: Long by longValue(KEY_ACI_LAST_SIGNED_PREKEY_ROTATION_TIME, System.currentTimeMillis() - PreKeysSyncJob.REFRESH_INTERVAL)
-        override var nextEcOneTimePreKeyId: Int by integerValue(KEY_ACI_NEXT_ONE_TIME_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var nextKyberPreKeyId: Int by integerValue(KEY_ACI_NEXT_KYBER_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var lastResortKyberPreKeyId: Int by integerValue(KEY_ACI_LAST_RESORT_KYBER_PREKEY_ID, -1)
-        override var lastResortKyberPreKeyRotationTime: Long by longValue(KEY_ACI_LAST_RESORT_KYBER_PREKEY_ROTATION_TIME, 0)
-    }
-
-    @get:JvmName("pniPreKeys")
-    val pniPreKeys: PreKeyMetadataStore = object : PreKeyMetadataStore {
-        override var nextSignedPreKeyId: Int by integerValue(KEY_PNI_NEXT_SIGNED_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var activeSignedPreKeyId: Int by integerValue(KEY_PNI_ACTIVE_SIGNED_PREKEY_ID, -1)
-        override var isSignedPreKeyRegistered: Boolean by booleanValue(KEY_PNI_SIGNED_PREKEY_REGISTERED, false)
-        override var lastSignedPreKeyRotationTime: Long by longValue(KEY_PNI_LAST_SIGNED_PREKEY_ROTATION_TIME, System.currentTimeMillis() - PreKeysSyncJob.REFRESH_INTERVAL)
-        override var nextEcOneTimePreKeyId: Int by integerValue(KEY_PNI_NEXT_ONE_TIME_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var nextKyberPreKeyId: Int by integerValue(KEY_PNI_NEXT_KYBER_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
-        override var lastResortKyberPreKeyId: Int by integerValue(KEY_PNI_LAST_RESORT_KYBER_PREKEY_ID, -1)
-        override var lastResortKyberPreKeyRotationTime: Long by longValue(KEY_PNI_LAST_RESORT_KYBER_PREKEY_ROTATION_TIME, 0)
-    }
+//    @get:JvmName("pniPreKeys")
+//    val pniPreKeys: PreKeyMetadataStore = object : PreKeyMetadataStore {
+//        override var nextSignedPreKeyId: Int by integerValue(KEY_PNI_NEXT_SIGNED_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var activeSignedPreKeyId: Int by integerValue(KEY_PNI_ACTIVE_SIGNED_PREKEY_ID, -1)
+//        override var isSignedPreKeyRegistered: Boolean by booleanValue(KEY_PNI_SIGNED_PREKEY_REGISTERED, false)
+//        override var lastSignedPreKeyRotationTime: Long by longValue(KEY_PNI_LAST_SIGNED_PREKEY_ROTATION_TIME, System.currentTimeMillis() - PreKeysSyncJob.REFRESH_INTERVAL)
+//        override var nextEcOneTimePreKeyId: Int by integerValue(KEY_PNI_NEXT_ONE_TIME_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var nextKyberPreKeyId: Int by integerValue(KEY_PNI_NEXT_KYBER_PREKEY_ID, SecureRandom().nextInt(Medium.MAX_VALUE))
+//        override var lastResortKyberPreKeyId: Int by integerValue(KEY_PNI_LAST_RESORT_KYBER_PREKEY_ID, -1)
+//        override var lastResortKyberPreKeyRotationTime: Long by longValue(KEY_PNI_LAST_RESORT_KYBER_PREKEY_ROTATION_TIME, 0)
+//    }
 
     /** Indicates whether the user has the ability to receive FCM messages. Largely coupled to whether they have Play Service. */
     @get:JvmName("isFcmEnabled")
     var fcmEnabled: Boolean by booleanValue(KEY_FCM_ENABLED, false)
 
     /** The FCM token, which allows the server to send us FCM messages. */
-    var fcmToken: String?
-        get() {
-            val tokenVersion: Int = getInteger(KEY_FCM_TOKEN_VERSION, 0)
-            return if (tokenVersion == Util.getCanonicalVersionCode()) {
-                getString(KEY_FCM_TOKEN, null)
-            } else {
-                null
-            }
-        }
-        set(value) {
-            store.beginWrite()
-                .putString(KEY_FCM_TOKEN, value)
-                .putInteger(KEY_FCM_TOKEN_VERSION, Util.getCanonicalVersionCode())
-                .putLong(KEY_FCM_TOKEN_LAST_SET_TIME, System.currentTimeMillis())
-                .apply()
-        }
+//    var fcmToken: String?
+//        get() {
+//            val tokenVersion: Int = getInteger(KEY_FCM_TOKEN_VERSION, 0)
+//            return if (tokenVersion == Util.getCanonicalVersionCode()) {
+//                getString(KEY_FCM_TOKEN, null)
+//            } else {
+//                null
+//            }
+//        }
+//        set(value) {
+//            store.beginWrite()
+//                .putString(KEY_FCM_TOKEN, value)
+//                .putInteger(KEY_FCM_TOKEN_VERSION, Util.getCanonicalVersionCode())
+//                .putLong(KEY_FCM_TOKEN_LAST_SET_TIME, System.currentTimeMillis())
+//                .apply()
+//        }
 
     /** When we last set the [fcmToken] */
     val fcmTokenLastSetTime: Long
@@ -360,11 +360,11 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
 
         putBoolean(KEY_IS_REGISTERED, registered)
 
-        ApplicationDependencies.getIncomingMessageObserver().notifyRegistrationChanged()
-
-        if (previous != registered) {
-            Recipient.self().live().refresh()
-        }
+//        ApplicationDependencies.getIncomingMessageObserver().notifyRegistrationChanged()
+//
+//        if (previous != registered) {
+//            Recipient.self().live().refresh()
+//        }
 
         if (previous && !registered) {
             clearLocalCredentials()
@@ -378,9 +378,9 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
     fun clearRegistrationButKeepCredentials() {
         putBoolean(KEY_IS_REGISTERED, false)
 
-        ApplicationDependencies.getIncomingMessageObserver().notifyRegistrationChanged()
+//        ApplicationDependencies.getIncomingMessageObserver().notifyRegistrationChanged()
 
-        Recipient.self().live().refresh()
+//        Recipient.self().live().refresh()
     }
 
     val deviceName: String?
@@ -409,25 +409,25 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
         }
 
     /** The local user's username link components, if set. */
-    var usernameLink: UsernameLinkComponents?
-        get() {
-            val entropy: ByteArray? = getBlob(KEY_USERNAME_LINK_ENTROPY, null)
-            val serverId: ByteArray? = getBlob(KEY_USERNAME_LINK_SERVER_ID, null)
-
-            return if (entropy != null && serverId != null) {
-                val serverIdUuid = UuidUtil.parseOrThrow(serverId)
-                UsernameLinkComponents(entropy, serverIdUuid)
-            } else {
-                null
-            }
-        }
-        set(value) {
-            store
-                .beginWrite()
-                .putBlob(KEY_USERNAME_LINK_ENTROPY, value?.entropy)
-                .putBlob(KEY_USERNAME_LINK_SERVER_ID, value?.serverId?.toByteArray())
-                .apply()
-        }
+//    var usernameLink: UsernameLinkComponents?
+//        get() {
+//            val entropy: ByteArray? = getBlob(KEY_USERNAME_LINK_ENTROPY, null)
+//            val serverId: ByteArray? = getBlob(KEY_USERNAME_LINK_SERVER_ID, null)
+//
+//            return if (entropy != null && serverId != null) {
+//                val serverIdUuid = UuidUtil.parseOrThrow(serverId)
+//                UsernameLinkComponents(entropy, serverIdUuid)
+//            } else {
+//                null
+//            }
+//        }
+//        set(value) {
+//            store
+//                .beginWrite()
+//                .putBlob(KEY_USERNAME_LINK_ENTROPY, value?.entropy)
+//                .putBlob(KEY_USERNAME_LINK_SERVER_ID, value?.serverId?.toByteArray())
+//                .apply()
+//        }
 
     /**
      * There are some cases where our username may fall out of sync with the service. In particular, we may get a new value for our username from
@@ -440,16 +440,16 @@ internal class AccountValues internal constructor(store: KeyValueStore) : Signal
             putLong(KEY_USERNAME_SYNC_STATE, value.serialize())
         }
 
-    var usernameSyncErrorCount: Int by integerValue(KEY_USERNAME_SYNC_ERROR_COUNT, 0)
+//    var usernameSyncErrorCount: Int by integerValue(KEY_USERNAME_SYNC_ERROR_COUNT, 0)
 
     private fun clearLocalCredentials() {
-        putString(KEY_SERVICE_PASSWORD, Util.getSecret(18))
-
-        val newProfileKey = ProfileKeyUtil.createNew()
-        val self = Recipient.self()
-
-        SignalDatabase.recipients.setProfileKey(self.id, newProfileKey)
-        ApplicationDependencies.getGroupsV2Authorization().clear()
+//        putString(KEY_SERVICE_PASSWORD, Util.getSecret(18))
+//
+//        val newProfileKey = ProfileKeyUtil.createNew()
+//        val self = Recipient.self()
+//
+//        SignalDatabase.recipients.setProfileKey(self.id, newProfileKey)
+//        ApplicationDependencies.getGroupsV2Authorization().clear()
     }
 
     /** Do not alter. If you need to migrate more stuff, create a new method. */

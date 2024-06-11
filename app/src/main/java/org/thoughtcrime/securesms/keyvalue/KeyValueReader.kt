@@ -1,13 +1,11 @@
-package org.thoughtcrime.securesms.keyvalue;
-
-import androidx.annotation.NonNull;
+package org.thoughtcrime.securesms.keyvalue
 
 interface KeyValueReader {
-    byte[] getBlob(@NonNull String key, byte[] defaultValue);
-    boolean getBoolean(@NonNull String key, boolean defaultValue);
-    float getFloat(@NonNull String key, float defaultValue);
-    int getInteger(@NonNull String key, int defaultValue);
-    long getLong(@NonNull String key, long defaultValue);
-    String getString(@NonNull String key, String defaultValue);
-    boolean containsKey(@NonNull String key);
+    fun getBlob(key: String, defaultValue: ByteArray?): ByteArray?
+    fun getBoolean(key: String, defaultValue: Boolean): Boolean
+    fun getFloat(key: String, defaultValue: Float): Float
+    fun getInteger(key: String, defaultValue: Int): Int
+    fun getLong(key: String, defaultValue: Long): Long
+    fun getString(key: String, defaultValue: String?): String?
+    fun containsKey(key: String): Boolean
 }

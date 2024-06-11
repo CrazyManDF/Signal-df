@@ -3,6 +3,7 @@ package org.thoughtcrime.securesms.dependencies
 import android.app.Application
 import org.signal.libsignal.net.Network
 import org.thoughtcrime.securesms.BuildConfig
+import org.thoughtcrime.securesms.database.DatabaseObserver
 import org.thoughtcrime.securesms.database.JobDatabase
 import org.thoughtcrime.securesms.jobmanager.Constraint
 import org.thoughtcrime.securesms.jobmanager.Job
@@ -151,6 +152,10 @@ class ApplicationDependencyProvider(private val context: Application) :
             Network(BuildConfig.LIBSIGNAL_NET_ENV, StandardUserAgentInterceptor.USER_AGENT),
             config
         )
+    }
+
+    override fun provideDatabaseObserver(): DatabaseObserver {
+        return DatabaseObserver(context)
     }
 
     class DynamicCredentialsProvider : CredentialsProvider {

@@ -1,6 +1,8 @@
 package org.thoughtcrime.securesms.database
 
-class DatabaseObserver {
+import android.app.Application
+
+class DatabaseObserver(application: Application) {
 
     companion object {
 

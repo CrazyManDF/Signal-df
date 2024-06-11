@@ -1,10 +1,7 @@
-package org.thoughtcrime.securesms.keyvalue;
+package org.thoughtcrime.securesms.keyvalue
 
-import androidx.annotation.NonNull;
+interface KeyValuePersistentStorage {
+    fun writeDataSet(dataSet: KeyValueDataSet, removes: Collection<String>)
 
-import java.util.Collection;
-
-public interface KeyValuePersistentStorage {
-    void writeDataSet(@NonNull KeyValueDataSet dataSet, @NonNull Collection<String> removes);
-    @NonNull KeyValueDataSet getDataSet();
+    val dataSet: KeyValueDataSet
 }

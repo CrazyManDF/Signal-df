@@ -1,9 +1,10 @@
 package org.thoughtcrime.securesms.database
 
+import android.content.Context
 import org.signal.core.util.logging.Log
 import java.util.concurrent.TimeUnit
 
-class RecipientTable {
+class RecipientTable(context: Context, databaseHelper: SignalDatabase) {
 
 
     companion object {

@@ -1,123 +1,99 @@
-package org.thoughtcrime.securesms.keyvalue;
+package org.thoughtcrime.securesms.keyvalue
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import org.signal.core.util.ByteSerializer
+import org.signal.core.util.StringSerializer
+import org.thoughtcrime.securesms.database.model.databaseprotos.SignalStoreList
+import java.io.IOException
+import java.util.stream.Collectors
 
-import org.signal.core.util.ByteSerializer;
-import org.signal.core.util.StringSerializer;
-import org.thoughtcrime.securesms.database.model.databaseprotos.SignalStoreList;
+abstract class SignalStoreValues(val store: KeyValueStore) {
+    abstract fun onFirstEverAppLaunch()
 
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+    abstract fun getKeysToIncludeInBackup(): List<String>
 
-abstract class SignalStoreValues {
-
-    private final KeyValueStore store;
-
-    SignalStoreValues(@NonNull KeyValueStore store) {
-        this.store = store;
+    fun getString(key: String, defaultValue: String?): String? {
+        return store.getString(key, defaultValue)
     }
 
-    @NonNull KeyValueStore getStore() {
-        return store;
+    fun getInteger(key: String, defaultValue: Int): Int {
+        return store.getInteger(key, defaultValue)
     }
 
-    abstract void onFirstEverAppLaunch();
-
-    abstract @NonNull List<String> getKeysToIncludeInBackup();
-
-    String getString(String key, String defaultValue) {
-        return store.getString(key, defaultValue);
+    fun getLong(key: String, defaultValue: Long): Long {
+        return store.getLong(key, defaultValue)
     }
 
-    int getInteger(String key, int defaultValue) {
-        return store.getInteger(key, defaultValue);
+    fun getBoolean(key: String, defaultValue: Boolean): Boolean {
+        return store.getBoolean(key, defaultValue)
     }
 
-    long getLong(String key, long defaultValue) {
-        return store.getLong(key, defaultValue);
+    fun getFloat(key: String, defaultValue: Float): Float {
+        return store.getFloat(key, defaultValue)
     }
 
-    boolean getBoolean(String key, boolean defaultValue) {
-        return store.getBoolean(key, defaultValue);
+    fun getBlob(key: String, defaultValue: ByteArray?): ByteArray? {
+        return store.getBlob(key, defaultValue)
     }
 
-    float getFloat(String key, float defaultValue) {
-        return store.getFloat(key, defaultValue);
-    }
-
-    byte[] getBlob(String key, byte[] defaultValue) {
-        return store.getBlob(key, defaultValue);
-    }
-
-    <T> T getObject(@NonNull String key, @Nullable T defaultValue, @NonNull ByteSerializer<T> serializer) {
-        byte[] blob = store.getBlob(key, null);
-        if (blob == null) {
-            return defaultValue;
+    fun <T> getObject(key: String, defaultValue: T, serializer: ByteSerializer<T>): T {
+        val blob = store.getBlob(key, null)
+        return if (blob == null) {
+            defaultValue
         } else {
-            return serializer.deserialize(blob);
+            serializer.deserialize(blob)
         }
     }
 
-    <T> List<T> getList(@NonNull String key, @NonNull StringSerializer<T> serializer) {
-        byte[] blob = getBlob(key, null);
-        if (blob == null) {
-            return Collections.emptyList();
-        }
+    fun <T> getList(key: String, serializer: StringSerializer<T>): List<T> {
+        val blob = getBlob(key, null) ?: return emptyList()
 
         try {
-            SignalStoreList signalStoreList = SignalStoreList.ADAPTER.decode(blob);
+            val signalStoreList = SignalStoreList.ADAPTER.decode(blob)
 
-            return signalStoreList.contents
-                    .stream()
-                    .map(serializer::deserialize)
-                    .collect(Collectors.toList());
-
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
+            return signalStoreList.contents.map { data: String -> serializer.deserialize(data) }
+        } catch (e: IOException) {
+            throw IllegalArgumentException(e)
         }
     }
 
-    void putBlob(@NonNull String key, byte[] value) {
-        store.beginWrite().putBlob(key, value).apply();
+    fun putBlob(key: String, value: ByteArray) {
+        store.beginWrite().putBlob(key, value).apply()
     }
 
-    void putBoolean(@NonNull String key, boolean value) {
-        store.beginWrite().putBoolean(key, value).apply();
+    fun putBoolean(key: String, value: Boolean) {
+        store.beginWrite().putBoolean(key, value).apply()
     }
 
-    void putFloat(@NonNull String key, float value) {
-        store.beginWrite().putFloat(key, value).apply();
+    fun putFloat(key: String, value: Float) {
+        store.beginWrite().putFloat(key, value).apply()
     }
 
-    void putInteger(@NonNull String key, int value) {
-        store.beginWrite().putInteger(key, value).apply();
+    fun putInteger(key: String, value: Int) {
+        store.beginWrite().putInteger(key, value).apply()
     }
 
-    void putLong(@NonNull String key, long value) {
-        store.beginWrite().putLong(key, value).apply();
+    fun putLong(key: String, value: Long) {
+        store.beginWrite().putLong(key, value).apply()
     }
 
-    void putString(@NonNull String key, String value) {
-        store.beginWrite().putString(key, value).apply();
+    fun putString(key: String, value: String?) {
+        store.beginWrite().putString(key, value).apply()
     }
 
-    <T> void putObject(@NonNull String key, T value, @NonNull ByteSerializer<T> serializer) {
-        putBlob(key, serializer.serialize(value));
+    fun <T> putObject(key: String, value: T, serializer: ByteSerializer<T>) {
+        putBlob(key, serializer.serialize(value))
     }
 
-    <T> void putList(@NonNull String key, @NonNull List<T> values, @NonNull StringSerializer<T> serializer) {
-        putBlob(key, new SignalStoreList.Builder()
-                .contents(values.stream()
-                        .map(serializer::serialize)
-                        .collect(Collectors.toList()))
-                .build()
-                .encode());
+    fun <T> putList(key: String, values: List<T>, serializer: StringSerializer<T>) {
+        putBlob(key, SignalStoreList.Builder()
+            .contents(values.stream()
+                .map { data: T -> serializer.serialize(data) }
+                .collect(Collectors.toList()))
+            .build()
+            .encode())
     }
 
-    void remove(@NonNull String key) {
-        store.beginWrite().remove(key).apply();
+    fun remove(key: String) {
+        store.beginWrite().remove(key).apply()
     }
 }

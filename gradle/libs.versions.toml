@@ -34,6 +34,8 @@ androidDesugar = "2.0.4"
 kotlinxImmutable = "0.3.5"
 androidxSqlite = "2.4.0"
 sqlcipherAndroid = "4.6.0"
+androidxPreference= "1.2.1"
+jacksonCore="2.17.1"
 
 [libraries]
 # 1st Party
@@ -45,6 +47,9 @@ signal-android-database-sqlcipher = { group = "org.signal", name = "sqlcipher-an
 
 # Third Party
 kotlinx-collections-immutable = { module = "org.jetbrains.kotlinx:kotlinx-collections-immutable", version.ref = "kotlinxImmutable"}
+jackson-core = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonCore"}
+jackson-module = {module = "com.fasterxml.jackson.module:jackson-module-kotlin", version.ref = "jacksonCore"}
+
 
 # Desugaring
 android-tools-desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "androidDesugar"}
@@ -87,6 +92,8 @@ wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wireG
 
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite"}
 sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid"}
+androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidxPreference" }
+
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

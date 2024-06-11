@@ -1,6 +1,6 @@
 package org.thoughtcrime.securesms.keyvalue
 
-class InternalValues {
+class InternalValues(store: KeyValueStore) {
 
     val isWebsocketModeForced = true
 }

@@ -1,150 +1,139 @@
-package org.thoughtcrime.securesms.keyvalue;
+package org.thoughtcrime.securesms.keyvalue
 
-import androidx.annotation.NonNull;
+import org.thoughtcrime.securesms.util.Util.toIntExact
+import kotlin.reflect.KClass
+import kotlin.reflect.cast
 
-import org.thoughtcrime.securesms.util.Util;
+class KeyValueDataSet : KeyValueReader {
+    val values: HashMap<String, Any?> = hashMapOf()
+    val types: HashMap<String, KClass<*>> = hashMapOf()
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-public class KeyValueDataSet implements KeyValueReader {
-    private final Map<String, Object> values = new HashMap<>();
-    private final Map<String, Class>  types  = new HashMap<>();
-
-    public void putBlob(@NonNull String key, byte[] value) {
-        values.put(key, value);
-        types.put(key, byte[].class);
+    fun putBlob(key: String, value: ByteArray?) {
+        values[key] = value
+        types[key] = ByteArray::class
     }
 
-    public void putBoolean(@NonNull String key, boolean value) {
-        values.put(key, value);
-        types.put(key, Boolean.class);
+    fun putBoolean(key: String, value: Boolean) {
+        values[key] = value
+        types[key] = Boolean::class
     }
 
-    public void putFloat(@NonNull String key, float value) {
-        values.put(key, value);
-        types.put(key, Float.class);
+    fun putFloat(key: String, value: Float) {
+        values[key] = value
+        types[key] = Float::class
     }
 
-    public void putInteger(@NonNull String key, int value) {
-        values.put(key, value);
-        types.put(key, Integer.class);
+    fun putInteger(key: String, value: Int) {
+        values[key] = value
+        types[key] = Int::class
     }
 
-    public void putLong(@NonNull String key, long value) {
-        values.put(key, value);
-        types.put(key, Long.class);
+    fun putLong(key: String, value: Long) {
+        values[key] = value
+        types[key] = Long::class
     }
 
-    public void putString(@NonNull String key, String value) {
-        values.put(key, value);
-        types.put(key, String.class);
+    fun putString(key: String, value: String?) {
+        values[key] = value
+        types[key] = String::class
     }
 
-    void putAll(@NonNull KeyValueDataSet other) {
-        values.putAll(other.values);
-        types.putAll(other.types);
+    fun putAll(other: KeyValueDataSet) {
+        values.putAll(other.values)
+        types.putAll(other.types)
     }
 
-    void removeAll(@NonNull Collection<String> removes) {
-        for (String remove : removes) {
-            values.remove(remove);
-            types.remove(remove);
+    fun removeAll(removes: Collection<String>) {
+        for (remove in removes) {
+            values.remove(remove)
+            types.remove(remove)
         }
     }
 
-    @Override
-    public byte[] getBlob(@NonNull String key, byte[] defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, byte[].class, true);
+    override fun getBlob(key: String, defaultValue: ByteArray?): ByteArray? {
+        return if (containsKey(key)) {
+            readValueAsType(key, ByteArray::class, true)
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public boolean getBoolean(@NonNull String key, boolean defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, Boolean.class, false);
+    override fun getBoolean(key: String, defaultValue: Boolean): Boolean {
+        return if (containsKey(key)) {
+            readValueAsType(key, Boolean::class, false)!!
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public float getFloat(@NonNull String key, float defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, Float.class, false);
+    override fun getFloat(key: String, defaultValue: Float): Float {
+        return if (containsKey(key)) {
+            readValueAsType(key, Float::class, false)!!
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public int getInteger(@NonNull String key, int defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, Integer.class, false);
+    override fun getInteger(key: String, defaultValue: Int): Int {
+        return if (containsKey(key)) {
+            readValueAsType(key, Int::class, false)!!
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public long getLong(@NonNull String key, long defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, Long.class, false);
+    override fun getLong(key: String, defaultValue: Long): Long {
+        return if (containsKey(key)) {
+            readValueAsType(key, Long::class, false)!!
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public String getString(@NonNull String key, String defaultValue) {
-        if (containsKey(key)) {
-            return readValueAsType(key, String.class, true);
+    override fun getString(key: String, defaultValue: String?): String? {
+        return if (containsKey(key)) {
+            readValueAsType(key, String::class, true)
         } else {
-            return defaultValue;
+            defaultValue
         }
     }
 
-    @Override
-    public boolean containsKey(@NonNull String key) {
-        return values.containsKey(key);
+    override fun containsKey(key: String): Boolean {
+        return values.containsKey(key)
     }
 
-    public @NonNull Map<String, Object> getValues() {
-        return values;
+    fun getValues(): Map<String, Any?> {
+        return values
     }
 
-    public Class getType(@NonNull String key) {
-        return types.get(key);
+    fun getType(key: String): KClass<*>? {
+        return types[key]
     }
 
-    private <E> E readValueAsType(@NonNull String key, Class<E> expectedType, boolean nullable) {
-        Object value = values.get(key);
+    private fun <E : Any> readValueAsType(
+        key: String,
+        expectedType: KClass<E>,
+        nullable: Boolean
+    ): E? {
+        val value = values[key]
         if (value == null && nullable) {
-            return null;
+            return null
         }
 
-        if (value == null) {
-            throw new IllegalArgumentException("Nullability mismatch!");
+        requireNotNull(value) { "Nullability mismatch!" }
+
+        if (value::class == expectedType) {
+            return expectedType.cast(value)
         }
 
-        if (value.getClass() == expectedType) {
-            return expectedType.cast(value);
+        if (expectedType == Int::class && value is Long) {
+            return expectedType.cast(toIntExact(value))
         }
 
-        if (expectedType == Integer.class && value instanceof Long) {
-            long longValue = (long) value;
-            return expectedType.cast(Util.toIntExact(longValue));
+        if (expectedType == Long::class && value is Int) {
+            return expectedType.cast(value.toLong())
         }
 
-        if (expectedType == Long.class && value instanceof Integer) {
-            int intValue = (int) value;
-            return expectedType.cast((long) intValue);
-        }
-
-        throw new IllegalArgumentException("Type mismatch!");
+        throw IllegalArgumentException("Type mismatch!")
     }
 }
