@@ -36,11 +36,11 @@ android {
     }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
     buildFeatures {
         viewBinding = true
@@ -113,7 +113,7 @@ dependencies {
     coreLibraryDesugaring(libs.android.tools.desugar)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.androidx.sqlite)
-    implementation(libs.sqlcipher.android)
+//    implementation(libs.sqlcipher.android)
     implementation(libs.androidx.preference)
     implementation(libs.jackson.core)
     implementation(libs.jackson.module)

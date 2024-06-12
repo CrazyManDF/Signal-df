@@ -245,4 +245,8 @@ class MessageTable(context: Context, databaseHelper: SignalDatabase) :
 
         return database.rawQuery(rawQueryString, arguments)
     }
+
+    fun incrementDeliveryReceiptCount(targetTimestamps: Long, receiptAuthor: RecipientId, receiptSentTimestamp: Long): Boolean {
+        return true
+    }
 }

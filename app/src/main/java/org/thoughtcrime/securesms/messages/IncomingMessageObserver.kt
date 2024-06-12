@@ -21,6 +21,7 @@ import org.thoughtcrime.securesms.jobmanager.impl.BackoffUtil
 import org.thoughtcrime.securesms.jobmanager.impl.NetworkConstraint
 import org.thoughtcrime.securesms.jobs.ForegroundServiceUtil
 import org.thoughtcrime.securesms.jobs.ForegroundServiceUtil.startWhenCapable
+import org.thoughtcrime.securesms.jobs.PushProcessMessageErrorJob
 import org.thoughtcrime.securesms.jobs.PushProcessMessageJob
 import org.thoughtcrime.securesms.jobs.UnableToStartException
 import org.thoughtcrime.securesms.keyvalue.SignalStore
@@ -29,6 +30,7 @@ import org.thoughtcrime.securesms.notifications.NotificationChannels
 import org.thoughtcrime.securesms.recipients.RecipientId
 import org.thoughtcrime.securesms.util.AppForegroundObserver
 import org.thoughtcrime.securesms.util.SignalLocalMetrics
+import org.thoughtcrime.securesms.util.asChain
 import org.whispersystems.signalservice.api.SignalWebSocket
 import org.whispersystems.signalservice.api.messages.EnvelopeResponse
 import org.whispersystems.signalservice.api.push.ServiceId
@@ -74,6 +76,7 @@ class IncomingMessageObserver(private val context: Application) {
     private val lock: ReentrantLock = ReentrantLock()
     private val connectionNecessarySemaphore = Semaphore(0)
 
+    private val messageContentProcessor = MessageContentProcessor(context)
 
     private var appVisible = false
     private var lastInteractionTime: Long = System.currentTimeMillis()
@@ -221,6 +224,16 @@ class IncomingMessageObserver(private val context: Application) {
         return conclusion
     }
 
+
+    private fun MessageDecryptor.ErrorMetadata.toExceptionMetadata(): ExceptionMetadata {
+        return ExceptionMetadata(
+            this.sender,
+            this.senderDevice,
+            this.groupId
+        )
+    }
+
+
     private inner class MessageRetrievalThread : Thread("MessageRetrievalService"),
         Thread.UncaughtExceptionHandler {
 
@@ -285,15 +298,9 @@ class IncomingMessageObserver(private val context: Application) {
                                                     Log.d(TAG, "Ended database transaction.")
 
                                                     if (followUpOperations != null) {
-                                                        Log.d(
-                                                            TAG,
-                                                            "Running ${followUpOperations.size} follow-up operations..."
-                                                        )
-                                                        val jobs =
-                                                            followUpOperations.mapNotNull { it.run() }
-                                                        ApplicationDependencies.jobManager.addAllChains(
-                                                            jobs
-                                                        )
+                                                        Log.d(TAG, "Running ${followUpOperations.size} follow-up operations...")
+                                                        val jobs = followUpOperations.mapNotNull { it.run() }
+                                                        ApplicationDependencies.jobManager.addAllChains(jobs)
                                                     }
                                                     signalWebSocket.sendAck(response)
                                                 }
@@ -398,7 +405,7 @@ class IncomingMessageObserver(private val context: Application) {
             is MessageDecryptor.Result.Success -> {
                 val job = PushProcessMessageJob.processOrDefer(messageContentProcessor, result, localReceiveMetric)
                 if (job != null) {
-                    return result.followUpOperations + FollowUpOperation { job.asChain() }
+                    return result.followUpOperations + MessageDecryptor.FollowUpOperation { job.asChain() }
                 }
             }
             is MessageDecryptor.Result.Error -> {
@@ -442,7 +449,18 @@ class IncomingMessageObserver(private val context: Application) {
 //            envelope.timestamp!!,
 //            senderId,
 //            envelope.sourceDevice!!
-        )
+//        )
+    }
+
+    private fun MessageDecryptor.Result.toMessageState(): MessageState {
+        return when (this) {
+            is MessageDecryptor.Result.DecryptionError -> MessageState.DECRYPTION_ERROR
+            is MessageDecryptor.Result.Ignore -> MessageState.NOOP
+            is MessageDecryptor.Result.InvalidVersion -> MessageState.INVALID_VERSION
+            is MessageDecryptor.Result.LegacyMessage -> MessageState.LEGACY_MESSAGE
+            is MessageDecryptor.Result.Success -> MessageState.DECRYPTED_OK
+            is MessageDecryptor.Result.UnsupportedDataMessage -> MessageState.UNSUPPORTED_DATA_MESSAGE
+        }
     }
 
     private fun waitForConnectionNecessary() {

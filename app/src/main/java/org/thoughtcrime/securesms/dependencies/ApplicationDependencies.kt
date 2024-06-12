@@ -64,14 +64,14 @@ object ApplicationDependencies {
     val signalWebSocket: SignalWebSocket by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         provider!!.provideSignalWebSocket(
             {
-                getSignalServiceNetworkAccess().getConfiguration()
+                getSignalServiceNetworkAccess().getConfiguration()!!
             },
             ApplicationDependencies::libsignalNetwork
         )
     }
 
     val libsignalNetwork: LibSignalNetwork by lazy(LIBSIGNAL_NETWORK_LOCK) {
-        provider!!.provideLibsignalNetwork(getSignalServiceNetworkAccess().getConfiguration())
+        provider!!.provideLibsignalNetwork(getSignalServiceNetworkAccess().getConfiguration()!!)
     }
 
     val databaseObserver: DatabaseObserver  by lazy(LOCK) {

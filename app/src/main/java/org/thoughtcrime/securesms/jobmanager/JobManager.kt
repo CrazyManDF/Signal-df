@@ -147,6 +147,10 @@ class JobManager(
         }
     }
 
+    fun startChain(job: Job): Chain {
+        return Chain(this, listOf(job))
+    }
+
     private fun onEmptyQueue() {
 
     }

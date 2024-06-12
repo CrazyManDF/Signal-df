@@ -18,11 +18,12 @@ class DefaultWebSocketShadowingBridge(private val context: Application) : WebSoc
 
     private val store: InternalValues = SignalStore.internalValues()
     override fun writeStatsSnapshot(bytes: ByteArray) {
-        store.setWebSocketShadowingStats(bytes)
+//        store.setWebSocketShadowingStats(bytes)
     }
 
     override fun readStatsSnapshot(): ByteArray? {
-        return store.getWebSocketShadowingStats(null)
+//        return store.getWebSocketShadowingStats(null)
+        return null
     }
 
     override fun triggerFailureNotification(message: String) {

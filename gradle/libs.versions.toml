@@ -91,7 +91,7 @@ wire-grpc-client = { module = "com.squareup.wire:wire-grpc-client", version.ref 
 wire-runtime = { module = "com.squareup.wire:wire-runtime", version.ref = "wireGrpcClient" }
 
 androidx-sqlite = { module = "androidx.sqlite:sqlite", version.ref = "androidxSqlite"}
-sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid"}
+#sqlcipher-android = { module = "net.zetetic:sqlcipher-android", version.ref = "sqlcipherAndroid"}
 androidx-preference = { module = "androidx.preference:preference-ktx", version.ref = "androidxPreference" }
 
 

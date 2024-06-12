@@ -165,5 +165,6 @@ class SignalDatabase(
 
         val recipients: RecipientTable
             get() = instance!!.recipientTable
+
     }
 }

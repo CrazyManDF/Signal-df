@@ -1,11 +1,19 @@
 package org.thoughtcrime.securesms.database
 
 import android.content.Context
+import androidx.core.content.contentValuesOf
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.recipients.RecipientId
 import java.util.concurrent.TimeUnit
 
 class RecipientTable(context: Context, databaseHelper: SignalDatabase) {
 
+    fun markNeedsPniSignature(recipientId: RecipientId) {
+//        if (update(recipientId, contentValuesOf(NEEDS_PNI_SIGNATURE to 1))) {
+//            Log.i(TAG, "Marked $recipientId as needing a PNI signature message.")
+//            Recipient.live(recipientId).refresh()
+//        }
+    }
 
     companion object {
         val TAG = Log.tag(RecipientTable::class.java)

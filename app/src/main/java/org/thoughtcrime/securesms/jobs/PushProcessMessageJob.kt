@@ -1,8 +1,12 @@
 package org.thoughtcrime.securesms.jobs
 
 import org.signal.core.util.logging.Log
+import org.thoughtcrime.securesms.messages.MessageContentProcessor
+import org.thoughtcrime.securesms.messages.MessageDecryptor
+import org.thoughtcrime.securesms.util.SignalLocalMetrics
 
 class PushProcessMessageJob(parameters: Parameters) : BaseJob(parameters) {
+
     override fun onRun() {
         TODO("Not yet implemented")
     }
@@ -28,5 +32,9 @@ class PushProcessMessageJob(parameters: Parameters) : BaseJob(parameters) {
         const val QUEUE_PREFIX = "__PUSH_PROCESS_JOB__"
 
         private val TAG = Log.tag(PushProcessMessageJob::class.java)
+
+        fun processOrDefer(messageProcessor: MessageContentProcessor, result: MessageDecryptor.Result.Success, localReceiveMetric: SignalLocalMetrics.MessageReceive): PushProcessMessageJob? {
+            return null
+        }
     }
 }

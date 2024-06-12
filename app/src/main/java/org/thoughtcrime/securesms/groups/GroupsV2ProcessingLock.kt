@@ -3,6 +3,7 @@ package org.thoughtcrime.securesms.groups
 import org.signal.core.util.ThreadUtil
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.crypto.ReentrantSessionLock
+import org.thoughtcrime.securesms.database.SignalDatabase
 import org.thoughtcrime.securesms.util.FeatureFlags
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
@@ -16,7 +17,7 @@ object GroupsV2ProcessingLock {
     fun acquireGroupProcessingLock(): Closeable {
         if (FeatureFlags.internalUser()) {
             if (!lock.isHeldByCurrentThread) {
-                if (SignalDatabase.inTransaction()) {
+                if (SignalDatabase.inTransaction) {
                     throw AssertionError("Tried to acquire the group lock inside of a database transaction!")
                 }
                 if (ReentrantSessionLock.INSTANCE.isHeldByCurrentThread) {
