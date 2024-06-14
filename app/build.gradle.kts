@@ -21,7 +21,11 @@ android {
         }
 
 
-        buildConfigField("org.signal.libsignal.net.Network.Environment", "LIBSIGNAL_NET_ENV", "org.signal.libsignal.net.Network.Environment.PRODUCTION")
+        buildConfigField(
+            "org.signal.libsignal.net.Network.Environment",
+            "LIBSIGNAL_NET_ENV",
+            "org.signal.libsignal.net.Network.Environment.PRODUCTION"
+        )
         buildConfigField("String", "SIGNAL_AGENT", "\"OWA\"")
     }
 
@@ -113,8 +117,17 @@ dependencies {
     coreLibraryDesugaring(libs.android.tools.desugar)
     implementation(libs.kotlinx.collections.immutable)
     implementation(libs.androidx.sqlite)
-//    implementation(libs.sqlcipher.android)
     implementation(libs.androidx.preference)
     implementation(libs.jackson.core)
     implementation(libs.jackson.module)
+
+//    implementation(libs.mockito.inline)
+//    implementation(libs.mockito.kotlin)
+//    implementation(libs.mockito.android)
+    testImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
+
+    implementation(libs.kotlin.coroutines)
+    implementation(libs.kotlin.coroutines.android)
+    testImplementation(libs.kotlin.coroutines.test)
 }
