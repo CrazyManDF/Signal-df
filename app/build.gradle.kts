@@ -57,6 +57,13 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "META-INF/*"
+        }
+    }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
         }
     }
 }
@@ -90,9 +97,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
-    testImplementation(libs.junit)
-    androidTestImplementation(libs.androidx.junit)
-    androidTestImplementation(libs.androidx.espresso.core)
+
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
@@ -121,11 +126,30 @@ dependencies {
     implementation(libs.jackson.core)
     implementation(libs.jackson.module)
 
+    implementation(libs.glide.glide)
+
+    // 单元测试
 //    implementation(libs.mockito.inline)
 //    implementation(libs.mockito.kotlin)
 //    implementation(libs.mockito.android)
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.junit.ktx)
+    androidTestImplementation(libs.androidx.espresso.core)
+    implementation(libs.androidx.espresso.idling)
+    androidTestImplementation(libs.androidx.espresso.intents)
+
     testImplementation(libs.mockk)
     androidTestImplementation(libs.mockk.android)
+    testImplementation(libs.robolectric.robolectric)
+    testImplementation(libs.test.core)
+    testImplementation(libs.test.core.ktx)
+
+    androidTestImplementation(libs.test.core)
+    androidTestImplementation(libs.test.core.ktx)
+    androidTestImplementation(libs.test.rules)
+    androidTestImplementation(libs.test.runner)
 
     implementation(libs.kotlin.coroutines)
     implementation(libs.kotlin.coroutines.android)
